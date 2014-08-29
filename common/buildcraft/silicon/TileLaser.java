@@ -101,7 +101,7 @@ public class TileLaser extends TileRFBuildCraft implements IActionReceptor, IMac
 		}
 
 		// Disable the laser and do nothing if no energy is available.
-		if (battery.getEnergyStored() == 0) {
+		if (getBattery().getEnergyStored() == 0) {
 			removeLaser();
 			return;
 		}
@@ -116,8 +116,8 @@ public class TileLaser extends TileRFBuildCraft implements IActionReceptor, IMac
 		}
 
 		// Consume power and transfer it to the table.
-		double localPower = battery.getEnergyStored() > getMaxPowerSent() * 10? getMaxPowerSent() : battery.getEnergyStored() /10D;
-		battery.modifyEnergyStored((int)(-localPower * 10D));
+		double localPower = getBattery().getEnergyStored() > getMaxPowerSent() * 10? getMaxPowerSent() : battery.getEnergyStored() /10D;
+		getBattery().modifyEnergyStored((int)(-localPower * 10D));
 		laserTarget.receiveLaserEnergy(localPower);
 
 		if (laser != null) {
@@ -269,14 +269,14 @@ public class TileLaser extends TileRFBuildCraft implements IActionReceptor, IMac
 	public void readFromNBT(NBTTagCompound nbttagcompound) {
 		super.readFromNBT(nbttagcompound);
 
-		battery.readFromNBT(nbttagcompound);
+		getBattery().readFromNBT(nbttagcompound);
 	}
 
 	@Override
 	public void writeToNBT(NBTTagCompound nbttagcompound) {
 		super.writeToNBT(nbttagcompound);
 
-		battery.writeToNBT(nbttagcompound);
+		getBattery().writeToNBT(nbttagcompound);
 	}
 
 	@Override

@@ -6,17 +6,17 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.util.ForgeDirection;
 
 public abstract class TileRFBuildCraft extends TileBuildCraft implements IEnergyHandler{
-
-	private static final RFBattery invalid = new RFBattery(0,0,0); 
-	
 	
 	@NetworkData
-	protected RFBattery battery = invalid;
+	//protected RFBattery battery = invalid;
 
-	@Override
-	public void initialize(){
-		if(battery == invalid)
+	private RFBattery battery = null;
+	
+	public RFBattery getBattery(){
+		if(battery == null){
 			battery = getDefaultBattery();
+		}
+		return battery;
 	}
 	
 	@Override
@@ -24,7 +24,7 @@ public abstract class TileRFBuildCraft extends TileBuildCraft implements IEnergy
 		super.readFromNBT(nbttagcompound);
 
 		RFBattery tmp = RFBattery.fromNBT(nbttagcompound);
-		if(tmp == null && battery == invalid){
+		if(tmp == null){
 			battery = getDefaultBattery();
 		}else{
 			battery = tmp;
@@ -35,7 +35,7 @@ public abstract class TileRFBuildCraft extends TileBuildCraft implements IEnergy
 	public void writeToNBT(NBTTagCompound nbttagcompound) {
 		super.writeToNBT(nbttagcompound);
 
-		battery.writeToNBT(nbttagcompound);
+		getBattery().writeToNBT(nbttagcompound);
 	}
 
 	@Override
@@ -45,22 +45,22 @@ public abstract class TileRFBuildCraft extends TileBuildCraft implements IEnergy
 
 	@Override
 	public int extractEnergy(ForgeDirection from, int maxExtract, boolean simulate) {
-		return battery.extractEnergy(maxExtract, simulate);
+		return getBattery().extractEnergy(maxExtract, simulate);
 	}
 
 	@Override
 	public int getEnergyStored(ForgeDirection arg0) {
-		return battery.getEnergyStored();
+		return getBattery().getEnergyStored();
 	}
 
 	@Override
 	public int getMaxEnergyStored(ForgeDirection arg0) {
-		return battery.getMaxEnergyStored();
+		return getBattery().getMaxEnergyStored();
 	}
 
 	@Override
 	public int receiveEnergy(ForgeDirection from, int maxReceive, boolean simulate) {
-		return battery.receiveEnergy(maxReceive, simulate);
+		return getBattery().receiveEnergy(maxReceive, simulate);
 	}
 	
 	protected abstract RFBattery getDefaultBattery();

@@ -11,14 +11,12 @@ package buildcraft.factory;
 import java.io.IOException;
 
 import io.netty.buffer.ByteBuf;
-
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ICrafting;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidContainerRegistry;
@@ -26,13 +24,12 @@ import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTankInfo;
 import net.minecraftforge.fluids.IFluidHandler;
-
 import buildcraft.BuildCraftCore;
 import buildcraft.api.core.SafeTimeTracker;
 import buildcraft.api.gates.IAction;
-import buildcraft.api.mj.MjBattery;
 import buildcraft.core.IMachine;
-import buildcraft.core.TileBuildCraft;
+import buildcraft.core.RFBattery;
+import buildcraft.core.TileRFBuildCraft;
 import buildcraft.core.fluids.SingleUseTank;
 import buildcraft.core.fluids.TankManager;
 import buildcraft.core.network.PacketPayload;
@@ -40,7 +37,7 @@ import buildcraft.core.network.PacketUpdate;
 import buildcraft.core.recipes.RefineryRecipeManager;
 import buildcraft.core.recipes.RefineryRecipeManager.RefineryRecipe;
 
-public class TileRefinery extends TileBuildCraft implements IFluidHandler, IInventory, IMachine {
+public class TileRefinery extends TileRFBuildCraft implements IFluidHandler, IInventory, IMachine {
 
 	public static int LIQUID_PER_SLOT = FluidContainerRegistry.BUCKET_VOLUME * 4;
 	public SingleUseTank tank1 = new SingleUseTank("tank1", LIQUID_PER_SLOT, this);
@@ -53,9 +50,12 @@ public class TileRefinery extends TileBuildCraft implements IFluidHandler, IInve
 	private SafeTimeTracker updateNetworkTime = new SafeTimeTracker(BuildCraftCore.updateFactor);
 	private boolean isActive;
 
-	@MjBattery(maxCapacity = 1000, maxReceivedPerCycle = 150, minimumConsumption = 1)
-	private double mjStored = 0;
 
+	@Override
+	public RFBattery getDefaultBattery() {
+		return new RFBattery(10000, 1500);
+	}
+	
 	@Override
 	public int getSizeInventory() {
 		return 0;
@@ -102,11 +102,11 @@ public class TileRefinery extends TileBuildCraft implements IFluidHandler, IInve
 
 	@Override
 	public void updateEntity() {
+		super.updateEntity();
 		if (worldObj.isRemote) {
 			simpleAnimationIterate();
 			return;
 		}
-
 		if (updateNetworkTime.markTimeIfDelay(worldObj)) {
 			sendNetworkUpdate();
 		}
@@ -129,10 +129,10 @@ public class TileRefinery extends TileBuildCraft implements IFluidHandler, IInve
 			decreaseAnimation();
 			return;
 		}
-
+		
 		isActive = true;
 
-		if (mjStored >= currentRecipe.energyCost) {
+		if (getBattery().getEnergyStored() / 10 >= currentRecipe.energyCost) {
 			increaseAnimation();
 		} else {
 			decreaseAnimation();
@@ -148,8 +148,8 @@ public class TileRefinery extends TileBuildCraft implements IFluidHandler, IInve
 
         time = null;
 
-		if (mjStored >= currentRecipe.energyCost) {
-			mjStored -= currentRecipe.energyCost;
+		if (getBattery().getEnergyStored() / 10 >= currentRecipe.energyCost) {
+			getBattery().modifyEnergyStored(-currentRecipe.energyCost *10);
 
 			if (consumeInput(currentRecipe.ingredient1) && consumeInput(currentRecipe.ingredient2)) {
 				result.fill(currentRecipe.result, true);
@@ -205,8 +205,6 @@ public class TileRefinery extends TileBuildCraft implements IFluidHandler, IInve
 
 		animationStage = data.getInteger("animationStage");
 		animationSpeed = data.getFloat("animationSpeed");
-
-		mjStored = data.getDouble("mjStored");
 	}
 
 	@Override
@@ -217,8 +215,6 @@ public class TileRefinery extends TileBuildCraft implements IFluidHandler, IInve
 
 		data.setInteger("animationStage", animationStage);
 		data.setFloat("animationSpeed", animationSpeed);
-
-		data.setDouble("mjStored", mjStored);
 	}
 
 	public int getAnimationStage() {
@@ -383,4 +379,6 @@ public class TileRefinery extends TileBuildCraft implements IFluidHandler, IInve
 	public boolean hasCustomInventoryName() {
 		return false;
 	}
+
+
 }
