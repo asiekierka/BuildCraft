@@ -17,7 +17,6 @@ import buildcraft.api.blueprints.ITileBuilder;
 import buildcraft.api.blueprints.SchematicRegistry;
 import buildcraft.api.core.NetworkData;
 import buildcraft.api.core.SafeTimeTracker;
-import buildcraft.api.mj.MjBattery;
 import buildcraft.core.IBoxProvider;
 import buildcraft.core.LaserData;
 import buildcraft.core.RFBattery;

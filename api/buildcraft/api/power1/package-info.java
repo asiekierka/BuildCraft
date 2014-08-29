@@ -6,12 +6,6 @@
  * License 1.0, or MMPL. Please check the contents of the license located in
  * http://www.mod-buildcraft.com/MMPL-1.0.txt
  */
-package buildcraft.api.mj;
-
-public interface IBatteryIOObject extends IBatteryObject {
-	IOMode mode();
-
-	boolean canSend();
-
-	boolean canReceive();
-}
+@API(apiVersion = "1.1", owner = "BuildCraftAPI|core", provides = "BuildCraftAPI|power")
+package buildcraft.api.power1;
+import cpw.mods.fml.common.API;

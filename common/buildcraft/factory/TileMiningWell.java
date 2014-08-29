@@ -18,7 +18,6 @@ import net.minecraftforge.common.util.ForgeDirection;
 import buildcraft.BuildCraftCore;
 import buildcraft.BuildCraftFactory;
 import buildcraft.api.gates.IAction;
-import buildcraft.api.mj.MjBattery;
 import buildcraft.core.IMachine;
 import buildcraft.core.RFBattery;
 import buildcraft.core.TileRFBuildCraft;
