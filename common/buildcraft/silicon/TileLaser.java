@@ -70,8 +70,6 @@ public class TileLaser extends TileRFBuildCraft implements IActionReceptor, IMac
 		laser.isVisible = false;
 		laser.head = new Position(xCoord, yCoord, zCoord);
 		laser.tail = new Position(xCoord, yCoord, zCoord);
-		
-		battery = new RFBattery(10000, 250);
 	}
 
 	@Override

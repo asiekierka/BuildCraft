@@ -28,11 +28,6 @@ public class RFBattery implements IEnergyStorage {
 		this(0, 0, 0);
 	}
 
-	public RFBattery(int capacity) {
-
-		this(capacity, capacity, capacity);
-	}
-
 	public RFBattery(int capacity, int maxReceive) {
 
 		this(capacity, maxReceive, 0);

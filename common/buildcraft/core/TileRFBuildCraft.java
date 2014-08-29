@@ -7,16 +7,27 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 public abstract class TileRFBuildCraft extends TileBuildCraft implements IEnergyHandler{
 
+	private static final RFBattery invalid = new RFBattery(0,0,0); 
+	
+	
 	@NetworkData
-	protected RFBattery battery = new RFBattery(0,0,0);
+	protected RFBattery battery = invalid;
 
+	@Override
+	public void initialize(){
+		if(battery == invalid)
+			battery = getDefaultBattery();
+	}
+	
 	@Override
 	public void readFromNBT(NBTTagCompound nbttagcompound) {
 		super.readFromNBT(nbttagcompound);
 
-		battery = RFBattery.fromNBT(nbttagcompound);
-		if(battery == null){
-			
+		RFBattery tmp = RFBattery.fromNBT(nbttagcompound);
+		if(tmp == null && battery == invalid){
+			battery = getDefaultBattery();
+		}else{
+			battery = tmp;
 		}
 	}
 
@@ -28,7 +39,7 @@ public abstract class TileRFBuildCraft extends TileBuildCraft implements IEnergy
 	}
 
 	@Override
-	public boolean canConnectEnergy(ForgeDirection arg0) {
+	public boolean canConnectEnergy(ForgeDirection from) {
 		return true;
 	}
 
@@ -52,7 +63,7 @@ public abstract class TileRFBuildCraft extends TileBuildCraft implements IEnergy
 		return battery.receiveEnergy(maxReceive, simulate);
 	}
 	
-	public abstract RFBattery getDefaultBattery();
+	protected abstract RFBattery getDefaultBattery();
 	
 	
 	
