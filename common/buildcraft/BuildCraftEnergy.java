@@ -56,8 +56,6 @@ import buildcraft.core.network.BuildCraftChannelHandler;
 import buildcraft.core.proxy.CoreProxy;
 import buildcraft.core.triggers.BCTrigger;
 import buildcraft.energy.BlockBuildcraftFluid;
-import buildcraft.energy.BlockEnergyEmitter;
-import buildcraft.energy.BlockEnergyReceiver;
 import buildcraft.energy.BlockEngine;
 import buildcraft.energy.BucketHandler;
 import buildcraft.energy.EnergyProxy;
@@ -65,8 +63,6 @@ import buildcraft.energy.GuiHandler;
 import buildcraft.energy.ItemBucketBuildcraft;
 import buildcraft.energy.ItemEngine;
 import buildcraft.energy.SchematicEngine;
-import buildcraft.energy.TileEnergyEmitter;
-import buildcraft.energy.TileEnergyReceiver;
 import buildcraft.energy.TileEngine;
 import buildcraft.energy.TileEngine.EnergyStage;
 import buildcraft.energy.triggers.TriggerEngineHeat;
@@ -85,8 +81,6 @@ public class BuildCraftEnergy extends BuildCraftMod {
 	public static BiomeGenOilDesert biomeOilDesert;
 	public static BiomeGenOilOcean biomeOilOcean;
 	public static BlockEngine engineBlock;
-	public static BlockEnergyEmitter emitterBlock;
-	public static BlockEnergyReceiver receiverBlock;
 	public static Fluid fluidOil;
 	public static Fluid fluidFuel;
 	public static Fluid fluidRedPlasma;
@@ -260,17 +254,6 @@ public class BuildCraftEnergy extends BuildCraftMod {
 		IronEngineCoolant.addCoolant(FluidRegistry.getFluid("water"), 0.0023F);
 		IronEngineCoolant.addCoolant(Blocks.ice, 0, FluidRegistry.getFluidStack("water", FluidContainerRegistry.BUCKET_VOLUME * 2));
 
-		// Receiver / emitter
-
-		if (!BuildCraftCore.NEXTGEN_PREALPHA) {
-			emitterBlock = new BlockEnergyEmitter();
-			CoreProxy.proxy.registerBlock(emitterBlock.setBlockName("energyEmitterBlock"));
-			CoreProxy.proxy.registerTileEntity(TileEnergyEmitter.class, "net.minecraft.src.builders.TileEnergyEmitter");
-
-			receiverBlock = new BlockEnergyReceiver();
-			CoreProxy.proxy.registerBlock(receiverBlock.setBlockName("energyReceiverBlock"));
-			CoreProxy.proxy.registerTileEntity(TileEnergyReceiver.class, "net.minecraft.src.builders.TileEnergyReceiver");
-		}
 
 		MinecraftForge.EVENT_BUS.register(this);
 	}

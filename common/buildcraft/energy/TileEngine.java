@@ -21,8 +21,6 @@ import buildcraft.BuildCraftEnergy;
 import buildcraft.api.core.NetworkData;
 import buildcraft.api.gates.IOverrideDefaultTriggers;
 import buildcraft.api.gates.ITrigger;
-import buildcraft.api.mj.IBatteryObject;
-import buildcraft.api.mj.MjAPI;
 import buildcraft.api.power.IPowerEmitter;
 import buildcraft.api.power.IPowerReceptor;
 import buildcraft.api.power.PowerHandler;
@@ -270,7 +268,7 @@ public abstract class TileEngine extends TileBuildCraft implements IPowerRecepto
 
             IEnergyHandler handler = (IEnergyHandler) tile;
             int max = handler.receiveEnergy(orientation, (int) (maxEnergyExtracted()*10), true);
-            return (int) extractEnergy(0, max / 10, false);
+            return (int) extractEnergy(2, max / 10, false);
         } else
             return 0;
 
@@ -293,7 +291,7 @@ public abstract class TileEngine extends TileBuildCraft implements IPowerRecepto
                 if (extracted > 0) {
                     IEnergyHandler handler = (IEnergyHandler) tile;
                     int max = handler.receiveEnergy(orientation, (int) (maxEnergyExtracted()*10), false);
-                    extractEnergy(0, max / 10, true);
+                    extractEnergy(2, max / 10, true);
                 }
             }
 
