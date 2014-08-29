@@ -116,7 +116,7 @@ public class TileLaser extends TileRFBuildCraft implements IActionReceptor, IMac
 		}
 
 		// Consume power and transfer it to the table.
-		double localPower = getBattery().getEnergyStored() > getMaxPowerSent() * 10? getMaxPowerSent() : battery.getEnergyStored() /10D;
+		double localPower = getBattery().getEnergyStored() > getMaxPowerSent() * 10? getMaxPowerSent() : getBattery().getEnergyStored() /10D;
 		getBattery().modifyEnergyStored((int)(-localPower * 10D));
 		laserTarget.receiveLaserEnergy(localPower);
 
