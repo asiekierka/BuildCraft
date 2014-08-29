@@ -141,15 +141,11 @@ public abstract class TileAbstractBuilder extends TileRFBuildCraft implements IT
 	@Override
 	public void writeToNBT(NBTTagCompound nbttagcompound) {
 		super.writeToNBT(nbttagcompound);
-
-		nbttagcompound.setDouble("mjStored", battery.getEnergyStored()/10);
 	}
 
 	@Override
 	public void readFromNBT(NBTTagCompound nbttagcompound) {
 		super.readFromNBT(nbttagcompound);
-
-		battery.setEnergyStored((int) (nbttagcompound.getDouble("mjStored")*10));
 
 		mjPrev = battery.getEnergyStored()/10;
 		mjUnchangedCycles = 0;

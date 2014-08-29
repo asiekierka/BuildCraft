@@ -8,6 +8,8 @@
  */
 package buildcraft.factory;
 
+import io.netty.buffer.ByteBuf;
+
 import java.io.IOException;
 import java.util.Deque;
 import java.util.HashSet;
@@ -15,13 +17,10 @@ import java.util.LinkedList;
 import java.util.Set;
 import java.util.TreeMap;
 
-import io.netty.buffer.ByteBuf;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
-
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidContainerRegistry;
@@ -29,18 +28,17 @@ import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTankInfo;
 import net.minecraftforge.fluids.IFluidHandler;
-
 import buildcraft.BuildCraftCore;
 import buildcraft.BuildCraftFactory;
 import buildcraft.api.core.SafeTimeTracker;
 import buildcraft.api.gates.IAction;
-import buildcraft.api.mj.MjBattery;
 import buildcraft.core.BlockIndex;
 import buildcraft.core.CoreConstants;
 import buildcraft.core.EntityBlock;
 import buildcraft.core.IMachine;
+import buildcraft.core.RFBattery;
 import buildcraft.core.TileBuffer;
-import buildcraft.core.TileBuildCraft;
+import buildcraft.core.TileRFBuildCraft;
 import buildcraft.core.fluids.FluidUtils;
 import buildcraft.core.fluids.SingleUseTank;
 import buildcraft.core.network.PacketPayload;
@@ -49,7 +47,7 @@ import buildcraft.core.proxy.CoreProxy;
 import buildcraft.core.utils.BlockUtil;
 import buildcraft.core.utils.Utils;
 
-public class TilePump extends TileBuildCraft implements IMachine, IFluidHandler {
+public class TilePump extends TileRFBuildCraft implements IMachine, IFluidHandler {
 
 	public static final int REBUID_DELAY = 512;
 	public static int MAX_LIQUID = FluidContainerRegistry.BUCKET_VOLUME * 16;
@@ -66,9 +64,14 @@ public class TilePump extends TileBuildCraft implements IMachine, IFluidHandler 
 	private int numFluidBlocksFound = 0;
 	private boolean powered = false;
 
-	@MjBattery(maxCapacity = 100, maxReceivedPerCycle = 15, minimumConsumption = 1)
-	private double mjStored = 0;
+	//@MjBattery(maxCapacity = 100, maxReceivedPerCycle = 15, minimumConsumption = 1)
+	//private double mjStored = 0;
 
+	@Override
+	public RFBattery getDefaultBattery() {
+		return new RFBattery(1000, 250);
+	}
+	
 	@Override
 	public void updateEntity() {
 		super.updateEntity();
@@ -112,8 +115,8 @@ public class TilePump extends TileBuildCraft implements IMachine, IFluidHandler 
 		FluidStack fluidToPump = index != null ? BlockUtil.drainBlock(worldObj, index.x, index.y, index.z, false) : null;
 		if (fluidToPump != null) {
 			if (isFluidAllowed(fluidToPump.getFluid()) && tank.fill(fluidToPump, false) == fluidToPump.amount) {
-				if (mjStored > 10) {
-					mjStored -= 10;
+				if (battery.getEnergyStored()/10 > 10) {
+					battery.modifyEnergyStored(-10 * 10);
 
 					if (fluidToPump.getFluid() != FluidRegistry.WATER || BuildCraftCore.consumeWaterSources || numFluidBlocksFound < 9) {
 						index = getNextIndexToPump(true);
@@ -355,8 +358,6 @@ public class TilePump extends TileBuildCraft implements IMachine, IFluidHandler 
 
 		aimY = data.getInteger("aimY");
 		tubeY = data.getFloat("tubeY");
-
-		mjStored = data.getDouble("mjStored");
 	}
 
 	@Override
@@ -374,8 +375,6 @@ public class TilePump extends TileBuildCraft implements IMachine, IFluidHandler 
 		} else {
 			data.setFloat("tubeY", yCoord);
 		}
-
-		data.setDouble("mjStored", mjStored);
 	}
 
 	@Override
