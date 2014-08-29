@@ -14,25 +14,26 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
-
 import net.minecraftforge.common.util.ForgeDirection;
-
 import buildcraft.BuildCraftCore;
 import buildcraft.BuildCraftFactory;
 import buildcraft.api.gates.IAction;
 import buildcraft.api.mj.MjBattery;
 import buildcraft.core.IMachine;
-import buildcraft.core.TileBuildCraft;
+import buildcraft.core.RFBattery;
+import buildcraft.core.TileRFBuildCraft;
 import buildcraft.core.utils.BlockUtil;
 import buildcraft.core.utils.Utils;
 
-public class TileMiningWell extends TileBuildCraft implements IMachine {
+public class TileMiningWell extends TileRFBuildCraft implements IMachine {
 
 	boolean isDigging = true;
 
-	@MjBattery(maxCapacity = 1000, maxReceivedPerCycle = BuildCraftFactory.MINING_MJ_COST_PER_BLOCK, minimumConsumption = 1)
-	private double mjStored = 0;
-
+	@Override
+	public RFBattery getDefaultBattery() {
+		return new RFBattery(1000, 250);
+	}
+	
 	/**
 	 * Dig the next available piece of land if not done. As soon as it reaches
 	 * bedrock, lava or goes below 0, it's considered done.
@@ -43,12 +44,12 @@ public class TileMiningWell extends TileBuildCraft implements IMachine {
 			return;
 		}
 
-		float mj = BuildCraftFactory.MINING_MJ_COST_PER_BLOCK * BuildCraftFactory.miningMultiplier;
+		int mj = (int) (BuildCraftFactory.MINING_MJ_COST_PER_BLOCK * BuildCraftFactory.miningMultiplier);
 
-		if (mjStored < mj) {
+		if (battery.getEnergyStored()/10 < mj) {
 			return;
 		} else {
-			mjStored -= mj;
+			battery.modifyEnergyStored(-mj *10);
 		}
 
 		World world = worldObj;
