@@ -15,9 +15,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ResourceLocation;
-
 import net.minecraftforge.common.util.ForgeDirection;
-
 import buildcraft.BuildCraftCore;
 import buildcraft.api.core.NetworkData;
 import buildcraft.api.core.Position;
@@ -30,10 +28,12 @@ import buildcraft.core.Box;
 import buildcraft.core.EntityLaser;
 import buildcraft.core.IMachine;
 import buildcraft.core.LaserData;
+import buildcraft.core.RFBattery;
 import buildcraft.core.TileBuildCraft;
+import buildcraft.core.TileRFBuildCraft;
 import buildcraft.core.triggers.ActionMachineControl;
 
-public class TileLaser extends TileBuildCraft implements IActionReceptor, IMachine {
+public class TileLaser extends TileRFBuildCraft implements IActionReceptor, IMachine {
 
 	private static final float LASER_OFFSET = 2.0F / 16.0F;
 	private static final short POWER_AVERAGING = 100;
@@ -48,13 +48,17 @@ public class TileLaser extends TileBuildCraft implements IActionReceptor, IMachi
 	private ActionMachineControl.Mode lastMode = ActionMachineControl.Mode.Unknown;
 	private int powerIndex = 0;
 
-	@MjBattery(maxCapacity = 1000, maxReceivedPerCycle = 25, minimumConsumption = 1)
-	private double mjStored = 0;
+
 	@NetworkData
 	private double powerAverage = 0;
 	private final double[] power = new double[POWER_AVERAGING];
 
-
+	@Override
+	public RFBattery getDefaultBattery() {
+		return new RFBattery(1000, 250);
+	}
+	
+	
 	@Override
 	public void initialize() {
 		super.initialize();
@@ -66,6 +70,8 @@ public class TileLaser extends TileBuildCraft implements IActionReceptor, IMachi
 		laser.isVisible = false;
 		laser.head = new Position(xCoord, yCoord, zCoord);
 		laser.tail = new Position(xCoord, yCoord, zCoord);
+		
+		battery = new RFBattery(10000, 250);
 	}
 
 	@Override
@@ -97,7 +103,7 @@ public class TileLaser extends TileBuildCraft implements IActionReceptor, IMachi
 		}
 
 		// Disable the laser and do nothing if no energy is available.
-		if (mjStored == 0) {
+		if (battery.getEnergyStored() == 0) {
 			removeLaser();
 			return;
 		}
@@ -112,8 +118,8 @@ public class TileLaser extends TileBuildCraft implements IActionReceptor, IMachi
 		}
 
 		// Consume power and transfer it to the table.
-		double localPower = mjStored > getMaxPowerSent() ? getMaxPowerSent() : mjStored;
-		mjStored -= localPower;
+		double localPower = battery.getEnergyStored() > getMaxPowerSent() * 10? getMaxPowerSent() : battery.getEnergyStored() /10D;
+		battery.modifyEnergyStored((int)(-localPower * 10D));
 		laserTarget.receiveLaserEnergy(localPower);
 
 		if (laser != null) {
@@ -265,14 +271,14 @@ public class TileLaser extends TileBuildCraft implements IActionReceptor, IMachi
 	public void readFromNBT(NBTTagCompound nbttagcompound) {
 		super.readFromNBT(nbttagcompound);
 
-		mjStored = nbttagcompound.getDouble("mjStored");
+		battery.readFromNBT(nbttagcompound);
 	}
 
 	@Override
 	public void writeToNBT(NBTTagCompound nbttagcompound) {
 		super.writeToNBT(nbttagcompound);
 
-		nbttagcompound.setDouble("mjStored", mjStored);
+		battery.writeToNBT(nbttagcompound);
 	}
 
 	@Override
@@ -339,4 +345,6 @@ public class TileLaser extends TileBuildCraft implements IActionReceptor, IMachi
 	public AxisAlignedBB getRenderBoundingBox() {
 		return new Box(this).extendToEncompass(laser.tail).getBoundingBox();
 	}
+
+
 }
