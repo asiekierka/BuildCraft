@@ -71,8 +71,8 @@ public abstract class TileAbstractBuilder extends TileRFBuildCraft implements IT
 	public void updateEntity() {
 		super.updateEntity();
 
-		if (mjPrev != battery.getEnergyStored()/10) {
-			mjPrev = battery.getEnergyStored()/10;
+		if (mjPrev != getBattery().getEnergyStored()/10) {
+			mjPrev = getBattery().getEnergyStored()/10;
 			mjUnchangedCycles = 0;
 		}
 
@@ -90,8 +90,8 @@ public abstract class TileAbstractBuilder extends TileRFBuildCraft implements IT
 			buildersInAction.remove(toRemove);
 		}
 
-		if (mjPrev != battery.getEnergyStored()/10) {
-			mjPrev = battery.getEnergyStored()/10;
+		if (mjPrev != getBattery().getEnergyStored()/10) {
+			mjPrev = getBattery().getEnergyStored()/10;
 			mjUnchangedCycles = 0;
 		}
 
@@ -102,13 +102,13 @@ public abstract class TileAbstractBuilder extends TileRFBuildCraft implements IT
 		 * slowly to decrease the amount of power available in the builder.
 		 */
 		if (mjUnchangedCycles > 100) {
-			battery.modifyEnergyStored(-100 *10);
+			getBattery().modifyEnergyStored(-100 *10);
 
-			if (battery.getEnergyStored()/10 < 0) {
-				battery.modifyEnergyStored(0);
+			if (getBattery().getEnergyStored()/10 < 0) {
+				getBattery().modifyEnergyStored(0);
 			}
 
-			mjPrev = battery.getEnergyStored()*10;
+			mjPrev = getBattery().getEnergyStored()*10;
 		}
 	}
 
@@ -131,11 +131,11 @@ public abstract class TileAbstractBuilder extends TileRFBuildCraft implements IT
 	}
 
 	public final double energyAvailable() {
-		return battery.getEnergyStored()/10;
+		return getBattery().getEnergyStored()/10;
 	}
 
 	public final void consumeEnergy(double quantity) {
-		battery.modifyEnergyStored((int)quantity *10);
+		getBattery().modifyEnergyStored((int)quantity *10);
 	}
 
 	@Override
@@ -147,7 +147,7 @@ public abstract class TileAbstractBuilder extends TileRFBuildCraft implements IT
 	public void readFromNBT(NBTTagCompound nbttagcompound) {
 		super.readFromNBT(nbttagcompound);
 
-		mjPrev = battery.getEnergyStored()/10;
+		mjPrev = getBattery().getEnergyStored()/10;
 		mjUnchangedCycles = 0;
 	}
 	

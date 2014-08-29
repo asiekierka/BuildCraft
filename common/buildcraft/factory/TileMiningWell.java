@@ -46,10 +46,10 @@ public class TileMiningWell extends TileRFBuildCraft implements IMachine {
 
 		int mj = (int) (BuildCraftFactory.MINING_MJ_COST_PER_BLOCK * BuildCraftFactory.miningMultiplier);
 
-		if (battery.getEnergyStored()/10 < mj) {
+		if (getBattery().getEnergyStored()/10 < mj) {
 			return;
 		} else {
-			battery.modifyEnergyStored(-mj *10);
+			getBattery().modifyEnergyStored(-mj *10);
 		}
 
 		World world = worldObj;

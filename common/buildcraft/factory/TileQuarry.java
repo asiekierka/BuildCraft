@@ -165,10 +165,10 @@ public class TileQuarry extends TileAbstractBuilder implements IMachine {
 			return;
 		}
 
-		double energyToUse = 2 + battery.getEnergyStored()/10 / 500;
+		double energyToUse = 2 + getBattery().getEnergyStored()/10 / 500;
 
-		if (battery.getEnergyStored()/10 > energyToUse) {
-			battery.modifyEnergyStored((int)(-energyToUse*10));
+		if (getBattery().getEnergyStored()/10 > energyToUse) {
+			getBattery().modifyEnergyStored((int)(-energyToUse*10));
 			speed = 0.1 + energyToUse / 200F;
 			moveHead(speed);
 		}
@@ -195,10 +195,10 @@ public class TileQuarry extends TileAbstractBuilder implements IMachine {
 	protected void dig() {
 		float mj = BuildCraftFactory.MINING_MJ_COST_PER_BLOCK * BuildCraftFactory.miningMultiplier;
 
-		if (battery.getEnergyStored()/10 < mj) {
+		if (getBattery().getEnergyStored()/10 < mj) {
 			return;
 		} else {
-			battery.modifyEnergyStored((int)(-mj*10));
+			getBattery().modifyEnergyStored((int)(-mj*10));
 		}
 
 		if (!findTarget(true)) {

@@ -115,8 +115,8 @@ public class TilePump extends TileRFBuildCraft implements IMachine, IFluidHandle
 		FluidStack fluidToPump = index != null ? BlockUtil.drainBlock(worldObj, index.x, index.y, index.z, false) : null;
 		if (fluidToPump != null) {
 			if (isFluidAllowed(fluidToPump.getFluid()) && tank.fill(fluidToPump, false) == fluidToPump.amount) {
-				if (battery.getEnergyStored()/10 > 10) {
-					battery.modifyEnergyStored(-10 * 10);
+				if (getBattery().getEnergyStored()/10 > 10) {
+					getBattery().modifyEnergyStored(-10 * 10);
 
 					if (fluidToPump.getFluid() != FluidRegistry.WATER || BuildCraftCore.consumeWaterSources || numFluidBlocksFound < 9) {
 						index = getNextIndexToPump(true);

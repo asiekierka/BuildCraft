@@ -583,7 +583,7 @@ public class TileBuilder extends TileAbstractBuilder implements IMachine {
 		if (getWorld().getWorldInfo().getGameType() == GameType.CREATIVE) {
 			build();
 		} else {
-			if (battery.getEnergyStored()/10 > POWER_ACTIVATION) {
+			if (getBattery().getEnergyStored()/10 > POWER_ACTIVATION) {
 				build();
 			}
 		}
@@ -591,7 +591,7 @@ public class TileBuilder extends TileAbstractBuilder implements IMachine {
 
 		if (done) {
 			return;
-		} else if (battery.getEnergyStored()/10 < 25) {
+		} else if (getBattery().getEnergyStored()/10 < 25) {
 			return;
 		}
 	}
