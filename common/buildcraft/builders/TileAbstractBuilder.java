@@ -13,7 +13,6 @@ import java.util.LinkedList;
 
 import net.minecraft.inventory.IInventory;
 import net.minecraft.nbt.NBTTagCompound;
-
 import buildcraft.api.blueprints.ITileBuilder;
 import buildcraft.api.blueprints.SchematicRegistry;
 import buildcraft.api.core.NetworkData;
@@ -21,13 +20,14 @@ import buildcraft.api.core.SafeTimeTracker;
 import buildcraft.api.mj.MjBattery;
 import buildcraft.core.IBoxProvider;
 import buildcraft.core.LaserData;
-import buildcraft.core.TileBuildCraft;
+import buildcraft.core.RFBattery;
+import buildcraft.core.TileRFBuildCraft;
 import buildcraft.core.network.RPC;
 import buildcraft.core.network.RPCHandler;
 import buildcraft.core.network.RPCMessageInfo;
 import buildcraft.core.network.RPCSide;
 
-public abstract class TileAbstractBuilder extends TileBuildCraft implements ITileBuilder, IInventory, IBoxProvider {
+public abstract class TileAbstractBuilder extends TileRFBuildCraft implements ITileBuilder, IInventory, IBoxProvider {
 
 	/**
 	 * Computes the maximum amount of energy required to build a full chest,
@@ -42,12 +42,15 @@ public abstract class TileAbstractBuilder extends TileBuildCraft implements ITil
 	public ArrayList<BuildingItem> buildersInAction = new ArrayList<BuildingItem>();
 
 	protected SafeTimeTracker buildTracker = new SafeTimeTracker(5);
-	@MjBattery(maxReceivedPerCycle = 100, maxCapacity = FULL_CHEST_ENERGY, minimumConsumption = 1)
-	protected double mjStored = 0;
 
 	private double mjPrev = 0;
 	private int mjUnchangedCycles = 0;
-
+	
+	@Override
+	public RFBattery getDefaultBattery() {
+		return new RFBattery(1000, 250);
+	}
+	
 	@Override
 	public void initialize () {
 		super.initialize();
@@ -68,8 +71,8 @@ public abstract class TileAbstractBuilder extends TileBuildCraft implements ITil
 	public void updateEntity() {
 		super.updateEntity();
 
-		if (mjPrev != mjStored) {
-			mjPrev = mjStored;
+		if (mjPrev != battery.getEnergyStored()/10) {
+			mjPrev = battery.getEnergyStored()/10;
 			mjUnchangedCycles = 0;
 		}
 
@@ -87,8 +90,8 @@ public abstract class TileAbstractBuilder extends TileBuildCraft implements ITil
 			buildersInAction.remove(toRemove);
 		}
 
-		if (mjPrev != mjStored) {
-			mjPrev = mjStored;
+		if (mjPrev != battery.getEnergyStored()/10) {
+			mjPrev = battery.getEnergyStored()/10;
 			mjUnchangedCycles = 0;
 		}
 
@@ -99,13 +102,13 @@ public abstract class TileAbstractBuilder extends TileBuildCraft implements ITil
 		 * slowly to decrease the amount of power available in the builder.
 		 */
 		if (mjUnchangedCycles > 100) {
-			mjStored -= 100;
+			battery.modifyEnergyStored(-100 *10);
 
-			if (mjStored < 0) {
-				mjStored = 0;
+			if (battery.getEnergyStored()/10 < 0) {
+				battery.modifyEnergyStored(0);
 			}
 
-			mjPrev = mjStored;
+			mjPrev = battery.getEnergyStored()*10;
 		}
 	}
 
@@ -128,27 +131,23 @@ public abstract class TileAbstractBuilder extends TileBuildCraft implements ITil
 	}
 
 	public final double energyAvailable() {
-		return mjStored;
+		return battery.getEnergyStored()/10;
 	}
 
 	public final void consumeEnergy(double quantity) {
-		mjStored -= quantity;
+		battery.modifyEnergyStored((int)quantity *10);
 	}
 
 	@Override
 	public void writeToNBT(NBTTagCompound nbttagcompound) {
 		super.writeToNBT(nbttagcompound);
-
-		nbttagcompound.setDouble("mjStored", mjStored);
 	}
 
 	@Override
 	public void readFromNBT(NBTTagCompound nbttagcompound) {
 		super.readFromNBT(nbttagcompound);
 
-		mjStored = nbttagcompound.getDouble("mjStored");
-
-		mjPrev = mjStored;
+		mjPrev = battery.getEnergyStored()/10;
 		mjUnchangedCycles = 0;
 	}
 	
