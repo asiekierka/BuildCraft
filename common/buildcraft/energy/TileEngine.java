@@ -292,7 +292,7 @@ public abstract class TileEngine extends TileBuildCraft implements IPowerRecepto
 		}
 	}
 
-	private void sendPower() {
+	protected void sendPower() {
 		TileEntity tile = getTileBuffer(orientation).getTile();
 		if (isPoweredTile(tile, orientation)) {
 			double extracted = getPowerToExtract();

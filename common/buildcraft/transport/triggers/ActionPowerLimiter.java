@@ -30,7 +30,7 @@ public class ActionPowerLimiter extends BCAction {
 
 	@Override
 	public String getDescription() {
-		return limit.maxPower + " MJ/t Limit";
+		return limit.maxPower + " RF/t Limit";
 	}
 
 	@Override

@@ -69,38 +69,49 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 			return;
 		}
 		
-		if (energy > 0) {
-			int sources = 0;
+		int sources = 0;
 
-			for (ForgeDirection o : ForgeDirection.VALID_DIRECTIONS) {
-				if (!container.isPipeConnected(o)) {
-					powerSources[o.ordinal()] = false;
-					continue;
-				}
-
-				if (isPowerSource(o)) {
-					powerSources[o.ordinal()] = true;
-				}
-
-				if (powerSources[o.ordinal()]) {
-					sources++;
-				}
+		for (ForgeDirection o : ForgeDirection.VALID_DIRECTIONS) {
+			if (!container.isPipeConnected(o)) {
+				powerSources[o.ordinal()] = false;
+				continue;
+			} else if (isPowerSource(o)) {
+				powerSources[o.ordinal()] = true;
 			}
 
-			if (sources <= 0) {
-				energy = energy > 50 ? energy - 50 : 0;
-				return;
+			if (powerSources[o.ordinal()]) {
+				sources++;
 			}
+		}
 
+		if (sources <= 0) {
+			energy = energy > 50 ? energy - 50 : 0;
+			return;
+		}
+	
+		if (sources > 0) {
 			int energyToUse = requestedEnergy / sources;
 			
 			for (ForgeDirection o : ForgeDirection.VALID_DIRECTIONS) {
 				if (!powerSources[o.ordinal()]) continue;
 				
-				int energyUsable = Math.min(energy, energyToUse);
-				if(energyUsable == 0) continue;
+				TileEntity tile = container.getTile(o);
 				
-				energy -= transport.receiveEnergy(o, energyUsable);
+				if(tile instanceof IEnergyHandler) {
+					int energyToRemove = Math.min(15000 - energy, energyToUse);
+					energy += ((IEnergyHandler)tile).extractEnergy(o.getOpposite(), energyToRemove, false);
+				}	
+			}
+			
+			if (energy > 0) {
+				for (ForgeDirection o : ForgeDirection.VALID_DIRECTIONS) {
+					if (!powerSources[o.ordinal()]) continue;
+					
+					int energyUsable = Math.min(energy, energyToUse);
+					if(energyUsable == 0) continue;
+					
+					energy -= transport.receiveEnergy(o, energyUsable);
+				}
 			}
 		}
 		
@@ -126,8 +137,8 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 	@Override
 	public void writeToNBT(NBTTagCompound data) {
 		super.writeToNBT(data);
-		this.powerHandler.writeToNBT(data);
-
+		data.setInteger("requestedEnergy", requestedEnergy);
+		
 		for (int i = 0; i < ForgeDirection.VALID_DIRECTIONS.length; i++) {
 			data.setBoolean("powerSources[" + i + "]", powerSources[i]);
 		}
@@ -136,8 +147,8 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 	@Override
 	public void readFromNBT(NBTTagCompound data) {
 		super.readFromNBT(data);
-		this.powerHandler.readFromNBT(data);
-
+		requestedEnergy = data.getInteger("requestedEnergy");
+		
 		for (int i = 0; i < ForgeDirection.VALID_DIRECTIONS.length; i++) {
 			powerSources[i] = data.getBoolean("powerSources[" + i + "]");
 		}
@@ -189,9 +200,9 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 	@Override
 	public int receiveEnergy(ForgeDirection from, int maxReceive,
 			boolean simulate) {
-		int maxEnergyToAdd = Math.min(maxReceive, Math.min(320, energy));
+		int maxEnergyToAdd = Math.min(maxReceive, 320);
 		if(!simulate) {
-			energy -= maxEnergyToAdd;
+			energy += maxEnergyToAdd;
 		}
 		return maxEnergyToAdd;
 	}
