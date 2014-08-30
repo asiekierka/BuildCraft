@@ -122,7 +122,7 @@ public class TileEngineCreative extends TileEngine {
 
 	@Override
 	public double getCurrentOutput() {
-		return powerMode.maxPower;
+		return powerMode.maxPower / 10.0;
 	}
 
 	@Override

@@ -601,7 +601,7 @@ public abstract class TileEngine extends TileBuildCraft implements IPowerRecepto
 	@Override
 	public int extractEnergy(ForgeDirection from, int maxExtract,
 			boolean simulate) {
-		if(!(from.getOpposite() == orientation)) return 0;
+		if(!(from == orientation)) return 0;
 		
 		int energyRF = (int)Math.round(10 * energy);
 		int energyExtracted = Math.min(maxExtract, energyRF);
@@ -614,7 +614,7 @@ public abstract class TileEngine extends TileBuildCraft implements IPowerRecepto
 
 	@Override
 	public int getEnergyStored(ForgeDirection from) {
-		if(!(from.getOpposite() == orientation)) return 0;
+		if(!(from == orientation)) return 0;
 		
 		return (int)Math.round(10 * energy);
 	}
@@ -626,6 +626,6 @@ public abstract class TileEngine extends TileBuildCraft implements IPowerRecepto
 
 	@Override
 	public boolean canConnectEnergy(ForgeDirection from) {
-		return from.getOpposite() == orientation;
+		return from == orientation;
 	}
 }
