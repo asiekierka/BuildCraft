@@ -56,8 +56,6 @@ import buildcraft.core.network.BuildCraftChannelHandler;
 import buildcraft.core.proxy.CoreProxy;
 import buildcraft.core.triggers.BCTrigger;
 import buildcraft.energy.BlockBuildcraftFluid;
-import buildcraft.energy.BlockEnergyEmitter;
-import buildcraft.energy.BlockEnergyReceiver;
 import buildcraft.energy.BlockEngine;
 import buildcraft.energy.BucketHandler;
 import buildcraft.energy.EnergyProxy;

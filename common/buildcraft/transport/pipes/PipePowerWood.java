@@ -8,16 +8,16 @@
  */
 package buildcraft.transport.pipes;
 
+import cofh.api.energy.IEnergyHandler;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraftforge.common.util.ForgeDirection;
 import buildcraft.BuildCraftTransport;
 import buildcraft.api.core.IIconProvider;
 import buildcraft.api.core.SafeTimeTracker;
-import buildcraft.api.mj.MjAPILegacy;
-import buildcraft.api.mj.MjBattery;
 import buildcraft.api.power.IPowerEmitter;
 import buildcraft.api.power.IPowerReceptor;
 import buildcraft.api.power.PowerHandler;
@@ -30,7 +30,7 @@ import buildcraft.transport.Pipe;
 import buildcraft.transport.PipeIconProvider;
 import buildcraft.transport.PipeTransportPower;
 
-public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerReceptor, IPipeTransportPowerHook {
+public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerReceptor, IEnergyHandler, IPipeTransportPowerHook {
 
 	public final boolean[] powerSources = new boolean[6];
 
@@ -70,7 +70,7 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 
 		double mjStored = this.powerHandler.getEnergyStored();
 
-		System.out.println("mjStored = " + mjStored);
+		//System.out.println("mjStored = " + mjStored);
 		
 		if (mjStored > 0) {
 			int sources = 0;
@@ -112,7 +112,9 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 				if (!powerSources[o.ordinal()]) {
 					continue;
 				}
-
+				
+				TileEntity tile = container.getTile(o);
+				
 				double energyUsable = mjStored > energyToRemove ? energyToRemove : mjStored;
 				double energySent = transport.receiveEnergy(o, energyUsable);
 
@@ -176,7 +178,14 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 	}
 
 	public boolean isPowerSource(ForgeDirection from) {
-		return container.getTile(from) instanceof IPowerEmitter;
+		TileEntity tile = container.getTile(from);
+		if(tile instanceof IPowerEmitter) {
+			return true;
+		} else if(tile instanceof IEnergyHandler) {
+			return ((IEnergyHandler)tile).canConnectEnergy(from.getOpposite());
+		} else {
+			return false;
+		}
 	}
 
 	@Override
@@ -187,5 +196,38 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 	@Override
 	public void doWork(PowerHandler workProvider) {
 
+	}
+
+	@Override
+	public boolean canConnectEnergy(ForgeDirection from) {
+		return true;
+	}
+
+	@Override
+	public int receiveEnergy(ForgeDirection from, int maxReceive,
+			boolean simulate) {
+		double mjStored = this.powerHandler.getEnergyStored();
+		int maxEnergyToAdd = Math.min(maxReceive, Math.min(320, (int)Math.round((1500.0 - mjStored) * 10)));
+		if(!simulate) {
+			System.out.println("givink energy 1 = " + maxEnergyToAdd);
+			this.powerHandler.setEnergy(mjStored + ((double)maxEnergyToAdd / 10.0));
+		}
+		return maxEnergyToAdd;
+	}
+
+	@Override
+	public int extractEnergy(ForgeDirection from, int maxExtract,
+			boolean simulate) {
+		return 0;
+	}
+
+	@Override
+	public int getEnergyStored(ForgeDirection from) {
+		return (int)Math.round(this.powerHandler.getEnergyStored() * 10);
+	}
+
+	@Override
+	public int getMaxEnergyStored(ForgeDirection from) {
+		return (int)Math.round(this.powerHandler.getMaxEnergyStored() * 10);
 	}
 }

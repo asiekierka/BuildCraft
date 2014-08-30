@@ -129,5 +129,4 @@ public class TileEngineCreative extends TileEngine {
 	public float explosionRange() {
 		return 0;
 	}
-
 }

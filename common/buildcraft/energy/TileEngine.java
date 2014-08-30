@@ -34,8 +34,8 @@ import buildcraft.core.TileBuffer;
 import buildcraft.core.TileBuildCraft;
 import buildcraft.energy.gui.ContainerEngine;
 
-public abstract class TileEngine extends TileBuildCraft implements IPowerReceptor, IPowerEmitter, IOverrideDefaultTriggers, IPipeConnection {
-	private static final boolean USE_CONSTANT_POWER = false;
+public abstract class TileEngine extends TileBuildCraft implements IPowerReceptor, IPowerEmitter, IOverrideDefaultTriggers, IPipeConnection, IEnergyHandler {
+	private boolean constantPower = false;
 	
 	// Index corresponds to metadata
 	public static final ResourceLocation[] BASE_TEXTURES = new ResourceLocation[]{
@@ -239,7 +239,7 @@ public abstract class TileEngine extends TileBuildCraft implements IPowerRecepto
 
 			if (progress > 0.5 && progressPart == 1) {
 				progressPart = 2;
-				if(!USE_CONSTANT_POWER)
+				if(!constantPower)
 					sendPower();
 			} else if (progress >= 1) {
 				progress = 0;
@@ -261,7 +261,7 @@ public abstract class TileEngine extends TileBuildCraft implements IPowerRecepto
 		}
 
 		// Uncomment for constant power
-		if(USE_CONSTANT_POWER) {
+		if(constantPower) {
 			if (isRedstonePowered && isActive()) {
 				sendPower();
 			} else currentOutput = 0;
@@ -279,6 +279,14 @@ public abstract class TileEngine extends TileBuildCraft implements IPowerRecepto
 
 			return extractEnergy(receptor.getMinEnergyReceived(),
 					receptor.getMaxEnergyReceived(), false);
+		} else if(tile instanceof IEnergyHandler) {
+			IEnergyHandler handler = ((IEnergyHandler)tile);
+			
+			int minEnergy = 0;
+			int maxEnergy = handler.receiveEnergy(
+					orientation.getOpposite(),
+					(int)Math.round(this.energy * 10), true);
+			return extractEnergy((double)minEnergy / 10.0, (double)maxEnergy / 10.0, false);
 		} else {
 			return 0;
 		}
@@ -299,6 +307,15 @@ public abstract class TileEngine extends TileBuildCraft implements IPowerRecepto
 							orientation.getOpposite());
 
 					extractEnergy(receptor.getMinEnergyReceived(), needed, true);
+				}
+			} else if (tile instanceof IEnergyHandler) {
+				IEnergyHandler handler = ((IEnergyHandler) tile);
+				if (extracted > 0) {
+					int neededRF = handler.receiveEnergy(
+							orientation.getOpposite(),
+							(int)Math.round(extracted * 10), false);
+					
+					extractEnergy(0.0, (double)neededRF / 10.0, true);
 				}
 			}
 		}
@@ -356,6 +373,9 @@ public abstract class TileEngine extends TileBuildCraft implements IPowerRecepto
 			TileEntity tile = getTileBuffer(o).getTile();
 
 			if ((!pipesOnly || tile instanceof IPipeTile) && isPoweredTile(tile, o)) {
+				if(tile instanceof IEnergyHandler) constantPower = true;
+				else constantPower = false;
+				
 				orientation = o;
 				worldObj.markBlockForUpdate(xCoord, yCoord, zCoord);
 				worldObj.notifyBlocksOfNeighborChange(xCoord, yCoord, zCoord, worldObj.getBlock(xCoord, yCoord, zCoord));
@@ -397,6 +417,8 @@ public abstract class TileEngine extends TileBuildCraft implements IPowerRecepto
 		progress = data.getFloat("progress");
 		energy = data.getDouble("energy");
 		heat = data.getFloat("heat");
+		if(data.hasKey("constantPower"))
+			constantPower = data.getBoolean("constantPower");
 	}
 
 	@Override
@@ -407,6 +429,7 @@ public abstract class TileEngine extends TileBuildCraft implements IPowerRecepto
 		data.setFloat("progress", progress);
 		data.setDouble("energy", energy);
 		data.setFloat("heat", heat);
+		data.setBoolean("constantPower", constantPower);
 	}
 
 	public void getGUINetworkData(int id, int value) {
@@ -510,6 +533,8 @@ public abstract class TileEngine extends TileBuildCraft implements IPowerRecepto
 			return false;
 		} else if (tile instanceof IPowerReceptor) {
 			return ((IPowerReceptor) tile).getPowerReceiver(side.getOpposite()) != null;
+		} else if (tile instanceof IEnergyHandler){
+			return ((IEnergyHandler) tile).canConnectEnergy(side.getOpposite());
 		} else {
 			return false;
 		}
@@ -563,5 +588,44 @@ public abstract class TileEngine extends TileBuildCraft implements IPowerRecepto
 
 	public void checkRedstonePower() {
 		isRedstonePowered = worldObj.isBlockIndirectlyGettingPowered(xCoord, yCoord, zCoord);
+	}
+	
+	// RF support
+
+	@Override
+	public int receiveEnergy(ForgeDirection from, int maxReceive,
+			boolean simulate) {
+		return 0;
+	}
+
+	@Override
+	public int extractEnergy(ForgeDirection from, int maxExtract,
+			boolean simulate) {
+		if(!(from.getOpposite() == orientation)) return 0;
+		
+		int energyRF = (int)Math.round(10 * energy);
+		int energyExtracted = Math.min(maxExtract, energyRF);
+		if(!simulate) {
+			if(energyExtracted == energyRF) energy = 0;
+			else energy -= (double)energyExtracted / 10.0;
+		}
+		return energyExtracted;
+	}
+
+	@Override
+	public int getEnergyStored(ForgeDirection from) {
+		if(!(from.getOpposite() == orientation)) return 0;
+		
+		return (int)Math.round(10 * energy);
+	}
+
+	@Override
+	public int getMaxEnergyStored(ForgeDirection from) {
+		return getEnergyStored(from);
+	}
+
+	@Override
+	public boolean canConnectEnergy(ForgeDirection from) {
+		return from.getOpposite() == orientation;
 	}
 }
