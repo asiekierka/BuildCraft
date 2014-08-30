@@ -41,7 +41,6 @@ import buildcraft.api.gates.GateExpansions;
 import buildcraft.api.gates.IGateExpansion;
 import buildcraft.api.gates.IOverrideDefaultTriggers;
 import buildcraft.api.gates.ITrigger;
-import buildcraft.api.mj.MjBattery;
 import buildcraft.api.power.IPowerReceptor;
 import buildcraft.api.power.PowerHandler;
 import buildcraft.api.power.PowerHandler.PowerReceiver;
@@ -71,7 +70,6 @@ public class TileGenericPipe extends TileEntity implements IPowerReceptor, IFlui
 	public final CoreState coreState = new CoreState();
 	public boolean[] pipeConnectionsBuffer = new boolean[6];
 
-	@MjBattery
 	public Pipe pipe;
 	public int redstoneInput = 0;
 

@@ -131,8 +131,8 @@ public class PipeItemsEmerald extends PipeItemsWood implements IClientState, IGu
 			}
 
 			if (doRemove) {
-				double energyUsed =  mjStored > stack.stackSize ? stack.stackSize : mjStored;
-				mjStored -= energyUsed;
+				double energyUsed =  powerHandler.getEnergyStored() > stack.stackSize ? stack.stackSize : powerHandler.getEnergyStored();
+				powerHandler.addEnergy(-energyUsed);
 
 				stack = inventory.decrStackSize(k, (int) Math.floor(energyUsed));
 			}

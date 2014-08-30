@@ -8,200 +8,188 @@
  */
 package buildcraft.transport.pipes;
 
+import buildcraft.BuildCraftTransport;
+import buildcraft.api.core.IIconProvider;
+import buildcraft.api.core.Position;
+import buildcraft.api.power.IPowerReceptor;
+import buildcraft.api.power.PowerHandler;
+import buildcraft.api.power.PowerHandler.PowerReceiver;
+import buildcraft.api.power.PowerHandler.Type;
+import buildcraft.api.transport.IPipeTile;
+import buildcraft.api.transport.PipeManager;
+import buildcraft.core.inventory.InvUtils;
+import buildcraft.transport.TravelingItem;
+import buildcraft.core.inventory.InventoryWrapper;
+import buildcraft.transport.Pipe;
+import buildcraft.transport.PipeIconProvider;
+import buildcraft.transport.PipeTransportItems;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.ISidedInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
-
 import net.minecraftforge.common.util.ForgeDirection;
 
-import buildcraft.BuildCraftTransport;
-import buildcraft.api.core.IIconProvider;
-import buildcraft.api.core.Position;
-import buildcraft.api.transport.IPipeTile;
-import buildcraft.api.transport.PipeManager;
-import buildcraft.core.inventory.InvUtils;
-import buildcraft.core.inventory.InventoryWrapper;
-import buildcraft.transport.Pipe;
-import buildcraft.transport.PipeIconProvider;
-import buildcraft.transport.PipeTransportItems;
-import buildcraft.transport.TravelingItem;
+public class PipeItemsWood extends Pipe<PipeTransportItems> implements IPowerReceptor {
 
-public class PipeItemsWood extends Pipe<PipeTransportItems> {
+    protected PowerHandler powerHandler;
+    protected int standardIconIndex = PipeIconProvider.TYPE.PipeItemsWood_Standard.ordinal();
+    protected int solidIconIndex = PipeIconProvider.TYPE.PipeAllWood_Solid.ordinal();
+    private PipeLogicWood logic = new PipeLogicWood(this) {
+        @Override
+        protected boolean isValidConnectingTile(TileEntity tile) {
+            if (tile instanceof IPipeTile)
+                return false;
+            if (!(tile instanceof IInventory))
+                return false;
+            if (!PipeManager.canExtractItems(pipe, tile.getWorldObj(), tile.xCoord, tile.yCoord, tile.zCoord))
+                return false;
+            return true;
+        }
+    };
 
-	// TODO
-	//@MjBattery (maxCapacity = 64, maxReceivedPerCycle = 64, minimumConsumption = 0)
-	public double mjStored = 0;
+    public PipeItemsWood(Item item) {
+        super(new PipeTransportItems(), item);
 
-	protected int standardIconIndex = PipeIconProvider.TYPE.PipeItemsWood_Standard.ordinal();
-	protected int solidIconIndex = PipeIconProvider.TYPE.PipeAllWood_Solid.ordinal();
+        powerHandler = new PowerHandler(this, Type.MACHINE);
+        powerHandler.configure(1, 64.1f, 1, 64.1f);
+        powerHandler.configurePowerPerdition(0, 0);
+    }
 
-	private PipeLogicWood logic = new PipeLogicWood(this) {
-		@Override
-		protected boolean isValidConnectingTile(TileEntity tile) {
-			if (tile instanceof IPipeTile) {
-				return false;
-			}
-			if (!(tile instanceof IInventory)) {
-				return false;
-			}
-			if (!PipeManager.canExtractItems(pipe, tile.getWorldObj(), tile.xCoord, tile.yCoord, tile.zCoord)) {
-				return false;
-			}
-			return true;
-		}
-	};
+    @Override
+    public boolean blockActivated(EntityPlayer entityplayer) {
+        return logic.blockActivated(entityplayer);
+    }
 
-	public PipeItemsWood(Item item) {
-		super(new PipeTransportItems(), item);
-	}
+    @Override
+    public void onNeighborBlockChange(int blockId) {
+        logic.onNeighborBlockChange(blockId);
+        super.onNeighborBlockChange(blockId);
+    }
 
-	@Override
-	public boolean blockActivated(EntityPlayer entityplayer) {
-		return logic.blockActivated(entityplayer);
-	}
+    @Override
+    public void initialize() {
+        logic.initialize();
+        super.initialize();
+    }
 
-	@Override
-	public void onNeighborBlockChange(int blockId) {
-		logic.onNeighborBlockChange(blockId);
-		super.onNeighborBlockChange(blockId);
-	}
+    @Override
+    @SideOnly(Side.CLIENT)
+    public IIconProvider getIconProvider() {
+        return BuildCraftTransport.instance.pipeIconProvider;
+    }
 
-	@Override
-	public void initialize() {
-		logic.initialize();
-		super.initialize();
-	}
+    @Override
+    public int getIconIndex(ForgeDirection direction) {
+        if (direction == ForgeDirection.UNKNOWN)
+            return standardIconIndex;
+        else {
+            int metadata = container.getBlockMetadata();
 
-	@Override
-	@SideOnly(Side.CLIENT)
-	public IIconProvider getIconProvider() {
-		return BuildCraftTransport.instance.pipeIconProvider;
-	}
+            if (metadata == direction.ordinal())
+                return solidIconIndex;
+            else
+                return standardIconIndex;
+        }
+    }
 
-	@Override
-	public int getIconIndex(ForgeDirection direction) {
-		if (direction == ForgeDirection.UNKNOWN) {
-			return standardIconIndex;
-		} else {
-			int metadata = container.getBlockMetadata();
+    @Override
+    public PowerReceiver getPowerReceiver(ForgeDirection side) {
+        return powerHandler.getPowerReceiver();
+    }
 
-			if (metadata == direction.ordinal()) {
-				return solidIconIndex;
-			} else {
-				return standardIconIndex;
-			}
-		}
-	}
+    @Override
+    public void doWork(PowerHandler workProvider) {
+        if (container.getWorldObj().isRemote)
+            return;
 
-	@Override
-	public void updateEntity () {
-		super.updateEntity();
+        if (powerHandler.getEnergyStored() <= 0)
+            return;
 
-		if (container.getWorldObj().isRemote) {
-			return;
-		}
+        if (transport.getNumberOfStacks() < PipeTransportItems.MAX_PIPE_STACKS)
+            extractItems();
+        powerHandler.setEnergy(0);
+    }
 
-		if (mjStored > 0) {
-			if (transport.getNumberOfStacks() < PipeTransportItems.MAX_PIPE_STACKS) {
-				extractItems();
-			}
+    private void extractItems() {
+        int meta = container.getBlockMetadata();
 
-			mjStored = 0;
-		}
-	}
+        if (meta > 5)
+            return;
 
-	private void extractItems() {
-		int meta = container.getBlockMetadata();
+        ForgeDirection side = ForgeDirection.getOrientation(meta);
+        TileEntity tile = container.getTile(side);
 
-		if (meta > 5) {
-			return;
-		}
+        if (tile instanceof IInventory) {
+            if (!PipeManager.canExtractItems(this, tile.getWorldObj(), tile.xCoord, tile.yCoord, tile.zCoord))
+                return;
 
-		ForgeDirection side = ForgeDirection.getOrientation(meta);
-		TileEntity tile = container.getTile(side);
+            IInventory inventory = (IInventory) tile;
 
-		if (tile instanceof IInventory) {
-			if (!PipeManager.canExtractItems(this, tile.getWorldObj(), tile.xCoord, tile.yCoord, tile.zCoord)) {
-				return;
-			}
+            ItemStack[] extracted = checkExtract(inventory, true, side.getOpposite());
+            if (extracted == null)
+                return;
 
-			IInventory inventory = (IInventory) tile;
+            tile.markDirty();
 
-			ItemStack[] extracted = checkExtract(inventory, true, side.getOpposite());
-			if (extracted == null) {
-				return;
-			}
+            for (ItemStack stack : extracted) {
+                if (stack == null || stack.stackSize == 0) {
+                    powerHandler.useEnergy(1, 1, true);
+                    continue;
+                }
 
-			tile.markDirty();
+                Position entityPos = new Position(tile.xCoord + 0.5, tile.yCoord + 0.5, tile.zCoord + 0.5, side.getOpposite());
 
-			for (ItemStack stack : extracted) {
-				if (stack == null || stack.stackSize == 0) {
-					mjStored = mjStored > 1 ? mjStored - 1 : 0;
+                entityPos.moveForwards(0.6);
 
-					continue;
-				}
+                TravelingItem entity = makeItem(entityPos.x, entityPos.y, entityPos.z, stack);
 
-				Position entityPos = new Position(tile.xCoord + 0.5, tile.yCoord + 0.5, tile.zCoord + 0.5, side.getOpposite());
+                transport.injectItem(entity, entityPos.orientation);
+            }
+        }
+    }
 
-				entityPos.moveForwards(0.6);
+    protected TravelingItem makeItem(double x, double y, double z, ItemStack stack) {
+        return TravelingItem.make(x, y, z, stack);
+    }
 
-				TravelingItem entity = makeItem(entityPos.x, entityPos.y, entityPos.z, stack);
+    /**
+     * Return the itemstack that can be if something can be extracted from this
+     * inventory, null if none. On certain cases, the extractable slot depends
+     * on the position of the pipe.
+     */
+    public ItemStack[] checkExtract(IInventory inventory, boolean doRemove, ForgeDirection from) {
+        IInventory inv = InvUtils.getInventory(inventory);
+        ItemStack result = checkExtractGeneric(inv, doRemove, from);
+        if (result != null) {
+            return new ItemStack[] { result };
+        }
+        return null;
+    }
 
-				transport.injectItem(entity, entityPos.orientation);
-			}
-		}
-	}
+    public ItemStack checkExtractGeneric(IInventory inventory, boolean doRemove, ForgeDirection from) {
+        return checkExtractGeneric(InventoryWrapper.getWrappedInventory(inventory), doRemove, from);
+    }
 
-	protected TravelingItem makeItem(double x, double y, double z, ItemStack stack) {
-		return TravelingItem.make(x, y, z, stack);
-	}
+    public ItemStack checkExtractGeneric(ISidedInventory inventory, boolean doRemove, ForgeDirection from) {
+        if (inventory == null)
+            return null;
 
-	/**
-	 * Return the itemstack that can be if something can be extracted from this
-	 * inventory, null if none. On certain cases, the extractable slot depends
-	 * on the position of the pipe.
-	 */
-	public ItemStack[] checkExtract(IInventory inventory, boolean doRemove, ForgeDirection from) {
-		IInventory inv = InvUtils.getInventory(inventory);
-		ItemStack result = checkExtractGeneric(inv, doRemove, from);
+        for (int k : inventory.getAccessibleSlotsFromSide(from.ordinal())) {
+            ItemStack slot = inventory.getStackInSlot(k);
 
-		if (result != null) {
-			return new ItemStack[]{result};
-		}
+            if (slot != null && slot.stackSize > 0 && inventory.canExtractItem(k, slot, from.ordinal())) {
+                if (doRemove) {
+                    return inventory.decrStackSize(k, (int) powerHandler.useEnergy(1, slot.stackSize, true));
+                } else {
+                    return slot;
+                }
+            }
+        }
 
-		return null;
-	}
-
-	public ItemStack checkExtractGeneric(IInventory inventory, boolean doRemove, ForgeDirection from) {
-		return checkExtractGeneric(InventoryWrapper.getWrappedInventory(inventory), doRemove, from);
-	}
-
-	public ItemStack checkExtractGeneric(ISidedInventory inventory, boolean doRemove, ForgeDirection from) {
-		if (inventory == null) {
-			return null;
-		}
-
-		for (int k : inventory.getAccessibleSlotsFromSide(from.ordinal())) {
-			ItemStack slot = inventory.getStackInSlot(k);
-
-			if (slot != null && slot.stackSize > 0 && inventory.canExtractItem(k, slot, from.ordinal())) {
-				if (doRemove) {
-					double energyUsed =  mjStored > slot.stackSize ? slot.stackSize : mjStored;
-					mjStored -= energyUsed;
-
-					return inventory.decrStackSize(k, (int) energyUsed);
-				} else {
-					return slot;
-				}
-			}
-		}
-
-		return null;
-	}
+        return null;
+    }
 }
