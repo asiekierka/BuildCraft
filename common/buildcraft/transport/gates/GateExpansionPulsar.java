@@ -17,8 +17,6 @@ import buildcraft.BuildCraftTransport;
 import buildcraft.api.gates.GateExpansionController;
 import buildcraft.api.gates.IAction;
 import buildcraft.api.gates.IGateExpansion;
-import buildcraft.api.mj.IBatteryObject;
-import buildcraft.api.mj.MjAPI;
 import buildcraft.transport.TileGenericPipe;
 import buildcraft.transport.triggers.ActionEnergyPulsar;
 import buildcraft.transport.triggers.ActionSingleEnergyPulse;
@@ -97,15 +95,15 @@ public final class GateExpansionPulsar extends GateExpansionBuildcraft implement
 				return;
 			}
 
-			IBatteryObject battery = MjAPI.getMjBattery(pipeTile);
+			/*IBatteryObject battery = MjAPI.getMjBattery(pipeTile);
 
 			if (battery != null && (!singlePulse || !hasPulsed)) {
 				((TileGenericPipe) pipeTile).pipe.gate.setPulsing(true);
 				battery.addEnergy(Math.min(1 << (pulseCount - 1), 64) * 1.01f);
 				hasPulsed = true;
-			} else {
-				((TileGenericPipe) pipeTile).pipe.gate.setPulsing(true);
-			}
+			} else {*/
+			// TODO
+			((TileGenericPipe) pipeTile).pipe.gate.setPulsing(true);
 		}
 
 		private void enableSinglePulse(int count) {

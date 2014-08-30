@@ -23,7 +23,6 @@ import net.minecraftforge.common.util.ForgeDirection;
 import buildcraft.BuildCraftTransport;
 import buildcraft.api.core.IIconProvider;
 import buildcraft.api.core.Position;
-import buildcraft.api.mj.MjBattery;
 import buildcraft.api.transport.IPipeTile;
 import buildcraft.api.transport.PipeManager;
 import buildcraft.core.inventory.InvUtils;
@@ -35,7 +34,8 @@ import buildcraft.transport.TravelingItem;
 
 public class PipeItemsWood extends Pipe<PipeTransportItems> {
 
-	@MjBattery (maxCapacity = 64, maxReceivedPerCycle = 64, minimumConsumption = 0)
+	// TODO
+	//@MjBattery (maxCapacity = 64, maxReceivedPerCycle = 64, minimumConsumption = 0)
 	public double mjStored = 0;
 
 	protected int standardIconIndex = PipeIconProvider.TYPE.PipeItemsWood_Standard.ordinal();

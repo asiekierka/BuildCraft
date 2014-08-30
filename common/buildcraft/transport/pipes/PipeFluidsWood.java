@@ -24,7 +24,6 @@ import net.minecraftforge.fluids.IFluidHandler;
 import buildcraft.BuildCraftTransport;
 import buildcraft.api.core.IIconProvider;
 import buildcraft.api.core.NetworkData;
-import buildcraft.api.mj.MjBattery;
 import buildcraft.api.transport.IPipeTile;
 import buildcraft.api.transport.PipeManager;
 import buildcraft.transport.Pipe;
@@ -41,7 +40,9 @@ public class PipeFluidsWood extends Pipe<PipeTransportFluids> {
 
 	private long lastMining = 0;
 	private boolean lastPower = false;
-	@MjBattery(maxCapacity = 250, maxReceivedPerCycle = 100, minimumConsumption = 0)
+
+	// TODO
+	//@MjBattery(maxCapacity = 250, maxReceivedPerCycle = 100, minimumConsumption = 0)
 	private double mjStored = 0;
 
 	private PipeLogicWood logic = new PipeLogicWood(this) {

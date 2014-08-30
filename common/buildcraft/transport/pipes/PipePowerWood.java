@@ -10,12 +10,9 @@ package buildcraft.transport.pipes;
 
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
-
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-
 import net.minecraftforge.common.util.ForgeDirection;
-
 import buildcraft.BuildCraftTransport;
 import buildcraft.api.core.IIconProvider;
 import buildcraft.api.core.SafeTimeTracker;
@@ -24,6 +21,7 @@ import buildcraft.api.mj.MjBattery;
 import buildcraft.api.power.IPowerEmitter;
 import buildcraft.api.power.IPowerReceptor;
 import buildcraft.api.power.PowerHandler;
+import buildcraft.api.power.PowerHandler.PerditionCalculator;
 import buildcraft.api.power.PowerHandler.PowerReceiver;
 import buildcraft.api.power.PowerHandler.Type;
 import buildcraft.api.transport.IPipeTile;
@@ -39,16 +37,16 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 	protected int standardIconIndex = PipeIconProvider.TYPE.PipePowerWood_Standard.ordinal();
 	protected int solidIconIndex = PipeIconProvider.TYPE.PipeAllWood_Solid.ordinal();
 
-	@MjBattery(maxCapacity = 1500, maxReceivedPerCycle = 500, minimumConsumption = 0)
-	private double mjStored = 0;
+	private PowerHandler powerHandler;
 	private final SafeTimeTracker sourcesTracker = new SafeTimeTracker(1);
 	private boolean full;
-
-	private MjAPILegacy powerHandler;
 
 	public PipePowerWood(Item item) {
 		super(new PipeTransportPower(), item);
 		transport.initFromPipe(getClass());
+		this.powerHandler = new PowerHandler(this, Type.PIPE);
+		powerHandler.configure(0, 500, 1, 1500);
+		powerHandler.setPerdition(new PerditionCalculator(PerditionCalculator.MIN_POWERLOSS));
 	}
 
 	@Override
@@ -70,6 +68,10 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 			return;
 		}
 
+		double mjStored = this.powerHandler.getEnergyStored();
+
+		System.out.println("mjStored = " + mjStored);
+		
 		if (mjStored > 0) {
 			int sources = 0;
 
@@ -95,13 +97,15 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 
 			double energyToRemove;
 
-			if (mjStored > 40) {
+			/* if (mjStored > 40) {
 				energyToRemove = mjStored / 40 + 4;
 			} else if (mjStored > 10) {
 				energyToRemove = mjStored / 10;
 			} else {
 				energyToRemove = 1;
-			}
+			} */
+			// TODO
+			energyToRemove = mjStored;
 			energyToRemove /= sources;
 
 			for (ForgeDirection o : ForgeDirection.VALID_DIRECTIONS) {
@@ -117,11 +121,13 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 				}
 			}
 		}
+		
+		this.powerHandler.setEnergy(mjStored);
 	}
 
 	public boolean requestsPower() {
 		if (full) {
-			boolean request = mjStored < 1500 / 2;
+			boolean request = this.powerHandler.getEnergyStored() < 1500 / 2;
 
 			if (request) {
 				full = false;
@@ -130,7 +136,7 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 			return request;
 		}
 
-		full = mjStored >= 1500 - 10;
+		full = this.powerHandler.getEnergyStored() >= 1500 - 10;
 
 		return !full;
 	}
@@ -138,7 +144,7 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 	@Override
 	public void writeToNBT(NBTTagCompound data) {
 		super.writeToNBT(data);
-		data.setDouble("mj", mjStored);
+		this.powerHandler.writeToNBT(data);
 
 		for (int i = 0; i < ForgeDirection.VALID_DIRECTIONS.length; i++) {
 			data.setBoolean("powerSources[" + i + "]", powerSources[i]);
@@ -148,7 +154,7 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 	@Override
 	public void readFromNBT(NBTTagCompound data) {
 		super.readFromNBT(data);
-		mjStored = data.getDouble("mj");
+		this.powerHandler.readFromNBT(data);
 
 		for (int i = 0; i < ForgeDirection.VALID_DIRECTIONS.length; i++) {
 			powerSources[i] = data.getBoolean("powerSources[" + i + "]");
@@ -175,11 +181,7 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 
 	@Override
 	public PowerReceiver getPowerReceiver(ForgeDirection side) {
-		if (powerHandler == null) {
-			powerHandler = MjAPILegacy.from(container, Type.PIPE);
-		}
-
-		return powerHandler.getPowerReceiver(ForgeDirection.UNKNOWN);
+		return powerHandler.getPowerReceiver();
 	}
 
 	@Override

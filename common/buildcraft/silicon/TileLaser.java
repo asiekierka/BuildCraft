@@ -22,7 +22,6 @@ import buildcraft.api.core.Position;
 import buildcraft.api.core.SafeTimeTracker;
 import buildcraft.api.gates.IAction;
 import buildcraft.api.gates.IActionReceptor;
-import buildcraft.api.mj.MjBattery;
 import buildcraft.api.power.ILaserTarget;
 import buildcraft.core.Box;
 import buildcraft.core.EntityLaser;

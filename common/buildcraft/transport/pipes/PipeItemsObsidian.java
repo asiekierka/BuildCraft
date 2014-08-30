@@ -28,7 +28,6 @@ import net.minecraftforge.common.util.ForgeDirection;
 import buildcraft.BuildCraftTransport;
 import buildcraft.api.core.IIconProvider;
 import buildcraft.api.core.Position;
-import buildcraft.api.mj.MjBattery;
 import buildcraft.core.inventory.ITransactor;
 import buildcraft.core.inventory.Transactor;
 import buildcraft.core.inventory.filters.StackFilter;
@@ -42,7 +41,8 @@ import buildcraft.transport.utils.TransportUtils;
 
 public class PipeItemsObsidian extends Pipe<PipeTransportItems> {
 
-	@MjBattery (maxCapacity = 256, maxReceivedPerCycle = 64, minimumConsumption = 0)
+	// TODO
+	//@MjBattery (maxCapacity = 256, maxReceivedPerCycle = 64, minimumConsumption = 0)
 	private double mjStored = 0;
 
 	private int[] entitiesDropped;

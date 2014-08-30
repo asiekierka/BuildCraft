@@ -12,17 +12,14 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import cofh.api.energy.IEnergyHandler;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
-
 import net.minecraftforge.common.util.ForgeDirection;
-
 import buildcraft.BuildCraftCore;
 import buildcraft.BuildCraftTransport;
 import buildcraft.api.core.SafeTimeTracker;
 import buildcraft.api.gates.ITrigger;
-import buildcraft.api.mj.IBatteryObject;
-import buildcraft.api.mj.MjAPI;
 import buildcraft.api.power.IPowerEmitter;
 import buildcraft.api.power.IPowerReceptor;
 import buildcraft.api.power.PowerHandler.PowerReceiver;
@@ -104,16 +101,19 @@ public class PipeTransportPower extends PipeTransport {
 				return true;
 			}
 		}
+		
+		if (tile instanceof IEnergyHandler) {
+			IEnergyHandler handler = (IEnergyHandler)tile;
+			if(handler != null && handler.canConnectEnergy(side.getOpposite())) {
+				return true;
+			}
+		}
 
 		if (container.pipe instanceof PipePowerWood && tile instanceof IPowerEmitter) {
 			IPowerEmitter emitter = (IPowerEmitter) tile;
 			if (emitter.canEmitPowerFrom(side.getOpposite())) {
 				return true;
 			}
-		}
-
-		if (MjAPI.getMjBattery(tile, MjAPI.DEFAULT_POWER_FRAMEWORK, side.getOpposite()) != null) {
-			return true;
 		}
 
 		return false;
@@ -204,20 +204,18 @@ public class PipeTransportPower extends PipeTransport {
 								ForgeDirection.VALID_DIRECTIONS[out].getOpposite(),
 								powerConsumed);
 					} else {
-						IBatteryObject battery = MjAPI.getMjBattery(tiles[out], MjAPI.DEFAULT_POWER_FRAMEWORK,
-								ForgeDirection.VALID_DIRECTIONS[out].getOpposite());
+						PowerReceiver prov = getReceiverOnSide(ForgeDirection.VALID_DIRECTIONS[out]);
 
-						if (battery != null) {
-							// Transmit power to the simplified power framework
-							powerConsumed = battery.addEnergy(powerConsumed);
-						} else {
-							PowerReceiver prov = getReceiverOnSide(ForgeDirection.VALID_DIRECTIONS[out]);
+						if (prov != null) {
+							// Transmit power to the legacy power framework
 
-							if (prov != null) {
-								// Transmit power to the legacy power framework
-
-								powerConsumed = prov.receiveEnergy(Type.PIPE, powerConsumed,
-										ForgeDirection.VALID_DIRECTIONS[out].getOpposite());
+							powerConsumed = prov.receiveEnergy(Type.PIPE, powerConsumed,
+									ForgeDirection.VALID_DIRECTIONS[out].getOpposite());
+						} else if(tiles[out] instanceof IEnergyHandler) {
+							IEnergyHandler handler = ((IEnergyHandler)tiles[out]);
+							if(handler.canConnectEnergy(ForgeDirection.VALID_DIRECTIONS[out].getOpposite())) {
+								powerConsumed = handler.receiveEnergy(ForgeDirection.VALID_DIRECTIONS[out].getOpposite(),
+										(int)Math.round(powerConsumed * 10), false) / 10.0;
 							}
 						}
 					}
@@ -274,13 +272,16 @@ public class PipeTransportPower extends PipeTransport {
 					if (request > 0) {
 						requestEnergy(dir, request);
 					}
-				}
+				} else {
+					if(tile instanceof IEnergyHandler) {
+						IEnergyHandler handler = (IEnergyHandler)tile;
+						if(handler.canConnectEnergy(dir.getOpposite())) {
+							double request = handler.receiveEnergy(dir.getOpposite(), (int)Math.floor(this.maxPower * 10), true) / 10.0;
 
-				if (tile != null) {
-					IBatteryObject battery = MjAPI.getMjBattery(tile, MjAPI.DEFAULT_POWER_FRAMEWORK, dir.getOpposite());
-
-					if (battery != null) {
-						requestEnergy(dir, battery.getEnergyRequested());
+							if (request > 0) {
+								requestEnergy(dir, request);
+							}
+						}
 					}
 				}
 			}

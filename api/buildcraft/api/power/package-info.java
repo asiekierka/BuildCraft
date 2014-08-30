@@ -6,8 +6,6 @@
  * License 1.0, or MMPL. Please check the contents of the license located in
  * http://www.mod-buildcraft.com/MMPL-1.0.txt
  */
-package buildcraft.api.mj1;
-
-public interface IBatteryProvider {
-	IBatteryObject getMjBattery(String kind);
-}
+@API(apiVersion = "1.1", owner = "BuildCraftAPI|core", provides = "BuildCraftAPI|power")
+package buildcraft.api.power;
+import cpw.mods.fml.common.API;

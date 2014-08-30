@@ -22,8 +22,6 @@ import buildcraft.BuildCraftEnergy;
 import buildcraft.api.core.NetworkData;
 import buildcraft.api.gates.IOverrideDefaultTriggers;
 import buildcraft.api.gates.ITrigger;
-import buildcraft.api.mj.IBatteryObject;
-import buildcraft.api.mj.MjAPI;
 import buildcraft.api.power.IPowerEmitter;
 import buildcraft.api.power.IPowerReceptor;
 import buildcraft.api.power.PowerHandler;
@@ -38,7 +36,8 @@ import buildcraft.core.TileBuildCraft;
 import buildcraft.energy.gui.ContainerEngine;
 
 public abstract class TileEngine extends TileBuildCraft implements IPowerReceptor, IPowerEmitter, IOverrideDefaultTriggers, IPipeConnection {
-
+	private static final boolean USE_CONSTANT_POWER = false;
+	
 	// Index corresponds to metadata
 	public static final ResourceLocation[] BASE_TEXTURES = new ResourceLocation[]{
 			new ResourceLocation(DefaultProps.TEXTURE_PATH_BLOCKS + "/base_wood.png"),
@@ -230,12 +229,6 @@ public abstract class TileEngine extends TileBuildCraft implements IPowerRecepto
 			}
 		}
 
-		if (!isRedstonePowered) {
-			if (energy > 1) {
-				energy--;
-			}
-		}
-
 		updateHeatLevel();
 		getEnergyStage();
 		engineUpdate();
@@ -247,7 +240,8 @@ public abstract class TileEngine extends TileBuildCraft implements IPowerRecepto
 
 			if (progress > 0.5 && progressPart == 1) {
 				progressPart = 2;
-				sendPower(); // Comment out for constant power
+				if(!USE_CONSTANT_POWER)
+					sendPower();
 			} else if (progress >= 1) {
 				progress = 0;
 				progressPart = 0;
@@ -268,21 +262,19 @@ public abstract class TileEngine extends TileBuildCraft implements IPowerRecepto
 		}
 
 		// Uncomment for constant power
-//		if (isRedstonePowered && isActive()) {
-//			sendPower();
-//		} else currentOutput = 0;
-
+		if(USE_CONSTANT_POWER) {
+			if (isRedstonePowered && isActive()) {
+				sendPower();
+			} else currentOutput = 0;
+		}
+		
 		burn();
 	}
 
 	private double getPowerToExtract() {
 		TileEntity tile = getTileBuffer(orientation).getTile();
 
-		IBatteryObject battery = MjAPI.getMjBattery(tile, MjAPI.DEFAULT_POWER_FRAMEWORK, orientation.getOpposite());
-
-		if (battery != null) {
-			return extractEnergy(0, battery.getEnergyRequested(), false);
-		} else if (tile instanceof IPowerReceptor) {
+		if (tile instanceof IPowerReceptor) {
 			PowerReceiver receptor = ((IPowerReceptor) tile)
 					.getPowerReceiver(orientation.getOpposite());
 
@@ -298,12 +290,7 @@ public abstract class TileEngine extends TileBuildCraft implements IPowerRecepto
 		if (isPoweredTile(tile, orientation)) {
 			double extracted = getPowerToExtract();
 
-			IBatteryObject battery = MjAPI.getMjBattery(tile, MjAPI.DEFAULT_POWER_FRAMEWORK, orientation.getOpposite());
-
-			if (battery != null) {
-				battery.addEnergy(extractEnergy(0, battery.maxReceivedPerCycle(),
-						true));
-			} else if (tile instanceof IPowerReceptor) {
+			if (tile instanceof IPowerReceptor) {
 				PowerReceiver receptor = ((IPowerReceptor) tile)
 						.getPowerReceiver(orientation.getOpposite());
 
@@ -522,8 +509,6 @@ public abstract class TileEngine extends TileBuildCraft implements IPowerRecepto
 	public boolean isPoweredTile(TileEntity tile, ForgeDirection side) {
 		if (tile == null) {
 			return false;
-		} else if (MjAPI.getMjBattery(tile, MjAPI.DEFAULT_POWER_FRAMEWORK, orientation.getOpposite()) != null) {
-			return true;
 		} else if (tile instanceof IPowerReceptor) {
 			return ((IPowerReceptor) tile).getPowerReceiver(side.getOpposite()) != null;
 		} else {

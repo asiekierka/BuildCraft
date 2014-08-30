@@ -6,12 +6,15 @@
  * License 1.0, or MMPL. Please check the contents of the license located in
  * http://www.mod-buildcraft.com/MMPL-1.0.txt
  */
-package buildcraft.api.mj1;
+package buildcraft.api.mj;
 
-public interface IBatteryIOObject extends IBatteryObject {
-	IOMode mode();
+public enum IOMode {
+	Both(true, true), Receive(true, false), Send(false, true), None(false, false);
 
-	boolean canSend();
+	public final boolean canReceive, canSend;
 
-	boolean canReceive();
+	IOMode(boolean canReceive, boolean canSend) {
+		this.canReceive = canReceive;
+		this.canSend = canSend;
+	}
 }

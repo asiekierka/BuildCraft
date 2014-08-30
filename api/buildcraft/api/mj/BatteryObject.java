@@ -6,7 +6,7 @@
  * License 1.0, or MMPL. Please check the contents of the license located in
  * http://www.mod-buildcraft.com/MMPL-1.0.txt
  */
-package buildcraft.api.mj1;
+package buildcraft.api.mj;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
