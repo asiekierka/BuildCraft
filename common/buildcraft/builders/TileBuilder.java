@@ -48,7 +48,7 @@ import buildcraft.core.network.RPCSide;
 
 public class TileBuilder extends TileAbstractBuilder implements IMachine {
 
-	private static int POWER_ACTIVATION = 50;
+	private static int POWER_ACTIVATION = 500;
 
 	@NetworkData
 	public Box box = new Box();
@@ -583,7 +583,7 @@ public class TileBuilder extends TileAbstractBuilder implements IMachine {
 		if (getWorld().getWorldInfo().getGameType() == GameType.CREATIVE) {
 			build();
 		} else {
-			if (getBattery().getEnergyStored()/10 > POWER_ACTIVATION) {
+			if (getBattery().getEnergyStored() > POWER_ACTIVATION) {
 				build();
 			}
 		}
@@ -591,7 +591,7 @@ public class TileBuilder extends TileAbstractBuilder implements IMachine {
 
 		if (done) {
 			return;
-		} else if (getBattery().getEnergyStored()/10 < 25) {
+		} else if (getBattery().getEnergyStored() < 250) {
 			return;
 		}
 	}

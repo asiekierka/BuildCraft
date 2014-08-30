@@ -42,8 +42,8 @@ public abstract class TileAbstractBuilder extends TileRFBuildCraft implements IT
 
 	protected SafeTimeTracker buildTracker = new SafeTimeTracker(5);
 
-	private double mjPrev = 0;
-	private int mjUnchangedCycles = 0;
+	private int rfPrev = 0;
+	private int rfUnchangedCycles = 0;
 	
 	@Override
 	public RFBattery getDefaultBattery() {
@@ -70,9 +70,9 @@ public abstract class TileAbstractBuilder extends TileRFBuildCraft implements IT
 	public void updateEntity() {
 		super.updateEntity();
 
-		if (mjPrev != getBattery().getEnergyStored()/10) {
-			mjPrev = getBattery().getEnergyStored()/10;
-			mjUnchangedCycles = 0;
+		if (rfPrev != getBattery().getEnergyStored()) {
+			rfPrev = getBattery().getEnergyStored();
+			rfUnchangedCycles = 0;
 		}
 
 		BuildingItem toRemove = null;
@@ -89,25 +89,25 @@ public abstract class TileAbstractBuilder extends TileRFBuildCraft implements IT
 			buildersInAction.remove(toRemove);
 		}
 
-		if (mjPrev != getBattery().getEnergyStored()/10) {
-			mjPrev = getBattery().getEnergyStored()/10;
-			mjUnchangedCycles = 0;
+		if (rfPrev != getBattery().getEnergyStored()) {
+			rfPrev = getBattery().getEnergyStored();
+			rfUnchangedCycles = 0;
 		}
 
-		mjUnchangedCycles++;
+		rfUnchangedCycles++;
 
 		/**
 		 * After 100 cycles with no consumption or additional power, start to
 		 * slowly to decrease the amount of power available in the builder.
 		 */
-		if (mjUnchangedCycles > 100) {
-			getBattery().modifyEnergyStored(-100 *10);
+		if (rfUnchangedCycles > 100) {
+			getBattery().modifyEnergyStored(-1000);
 
-			if (getBattery().getEnergyStored()/10 < 0) {
+			if (getBattery().getEnergyStored() < 0) {
 				getBattery().modifyEnergyStored(0);
 			}
 
-			mjPrev = getBattery().getEnergyStored()*10;
+			rfPrev = getBattery().getEnergyStored();
 		}
 	}
 
@@ -134,7 +134,7 @@ public abstract class TileAbstractBuilder extends TileRFBuildCraft implements IT
 	}
 
 	public final void consumeEnergy(double quantity) {
-		getBattery().modifyEnergyStored((int)quantity *10);
+		getBattery().modifyEnergyStored(0 - (int)Math.round(quantity * 10));
 	}
 
 	@Override
@@ -146,8 +146,8 @@ public abstract class TileAbstractBuilder extends TileRFBuildCraft implements IT
 	public void readFromNBT(NBTTagCompound nbttagcompound) {
 		super.readFromNBT(nbttagcompound);
 
-		mjPrev = getBattery().getEnergyStored()/10;
-		mjUnchangedCycles = 0;
+		rfPrev = getBattery().getEnergyStored();
+		rfUnchangedCycles = 0;
 	}
 	
 	@Override

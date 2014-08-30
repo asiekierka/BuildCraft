@@ -273,13 +273,7 @@ public abstract class TileEngine extends TileBuildCraft implements IPowerRecepto
 	private double getPowerToExtract() {
 		TileEntity tile = getTileBuffer(orientation).getTile();
 
-		if (tile instanceof IPowerReceptor) {
-			PowerReceiver receptor = ((IPowerReceptor) tile)
-					.getPowerReceiver(orientation.getOpposite());
-
-			return extractEnergy(receptor.getMinEnergyReceived(),
-					receptor.getMaxEnergyReceived(), false);
-		} else if(tile instanceof IEnergyHandler) {
+		if(tile instanceof IEnergyHandler) {
 			IEnergyHandler handler = ((IEnergyHandler)tile);
 			
 			int minEnergy = 0;
@@ -287,6 +281,12 @@ public abstract class TileEngine extends TileBuildCraft implements IPowerRecepto
 					orientation.getOpposite(),
 					(int)Math.round(this.energy * 10), true);
 			return extractEnergy((double)minEnergy / 10.0, (double)maxEnergy / 10.0, false);
+		} else if (tile instanceof IPowerReceptor) {
+			PowerReceiver receptor = ((IPowerReceptor) tile)
+					.getPowerReceiver(orientation.getOpposite());
+
+			return extractEnergy(receptor.getMinEnergyReceived(),
+					receptor.getMaxEnergyReceived(), false);
 		} else {
 			return 0;
 		}
@@ -296,8 +296,17 @@ public abstract class TileEngine extends TileBuildCraft implements IPowerRecepto
 		TileEntity tile = getTileBuffer(orientation).getTile();
 		if (isPoweredTile(tile, orientation)) {
 			double extracted = getPowerToExtract();
-
-			if (tile instanceof IPowerReceptor) {
+			
+			if (tile instanceof IEnergyHandler) {
+				IEnergyHandler handler = ((IEnergyHandler) tile);
+				if (Math.round(extracted * 10) > 0) {
+					int neededRF = handler.receiveEnergy(
+							orientation.getOpposite(),
+							(int)Math.round(extracted * 10), false);
+					
+					extractEnergy(0.0, (double)neededRF / 10.0, true);
+				}
+			} else if (tile instanceof IPowerReceptor) {
 				PowerReceiver receptor = ((IPowerReceptor) tile)
 						.getPowerReceiver(orientation.getOpposite());
 
@@ -307,15 +316,6 @@ public abstract class TileEngine extends TileBuildCraft implements IPowerRecepto
 							orientation.getOpposite());
 
 					extractEnergy(receptor.getMinEnergyReceived(), needed, true);
-				}
-			} else if (tile instanceof IEnergyHandler) {
-				IEnergyHandler handler = ((IEnergyHandler) tile);
-				if (extracted > 0) {
-					int neededRF = handler.receiveEnergy(
-							orientation.getOpposite(),
-							(int)Math.round(extracted * 10), false);
-					
-					extractEnergy(0.0, (double)neededRF / 10.0, true);
 				}
 			}
 		}
@@ -373,7 +373,9 @@ public abstract class TileEngine extends TileBuildCraft implements IPowerRecepto
 			TileEntity tile = getTileBuffer(o).getTile();
 
 			if ((!pipesOnly || tile instanceof IPipeTile) && isPoweredTile(tile, o)) {
-				if(tile instanceof IEnergyHandler) constantPower = true;
+				if((tile instanceof IPipeTile) && (((IPipeTile)tile).getPipeType() != PipeType.POWER))
+						constantPower = false;
+				else if(tile instanceof IEnergyHandler) constantPower = true;
 				else constantPower = false;
 				
 				orientation = o;

@@ -132,7 +132,7 @@ public class TileRefinery extends TileRFBuildCraft implements IFluidHandler, IIn
 		
 		isActive = true;
 
-		if (getBattery().getEnergyStored() / 10 >= currentRecipe.energyCost) {
+		if (getBattery().getEnergyStored() >= currentRecipe.energyCost * 10) {
 			increaseAnimation();
 		} else {
 			decreaseAnimation();
@@ -148,7 +148,7 @@ public class TileRefinery extends TileRFBuildCraft implements IFluidHandler, IIn
 
         time = null;
 
-		if (getBattery().getEnergyStored() / 10 >= currentRecipe.energyCost) {
+		if (getBattery().getEnergyStored() >= currentRecipe.energyCost * 10) {
 			getBattery().modifyEnergyStored(-currentRecipe.energyCost *10);
 
 			if (consumeInput(currentRecipe.ingredient1) && consumeInput(currentRecipe.ingredient2)) {

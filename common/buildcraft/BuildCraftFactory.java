@@ -74,7 +74,7 @@ import buildcraft.factory.schematics.SchematicTank;
 @Mod(name = "BuildCraft Factory", version = Version.VERSION, useMetadata = false, modid = "BuildCraft|Factory", dependencies = DefaultProps.DEPENDENCY_CORE)
 public class BuildCraftFactory extends BuildCraftMod {
 
-	public static final int MINING_MJ_COST_PER_BLOCK = 64;
+	public static final int MINING_RF_COST_PER_BLOCK = 640;
 	public static BlockQuarry quarryBlock;
 	public static BlockMiningWell miningWellBlock;
 	public static BlockAutoWorkbench autoWorkbenchBlock;
