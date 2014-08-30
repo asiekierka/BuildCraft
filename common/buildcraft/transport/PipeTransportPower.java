@@ -49,7 +49,7 @@ public class PipeTransportPower extends PipeTransport {
 	public int overload;
 	public int[] nextPowerQuery = new int[6];
 	public int[] internalNextPower = new int[6];
-	public int maxPower = 8;
+	public int maxPower = 80;
 	public float[] movementStage = new float[] {0, 0, 0};
 
 	private boolean needsInit = true;

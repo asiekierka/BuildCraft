@@ -33,14 +33,15 @@ import buildcraft.transport.PipeTransportPower;
 public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerReceptor, IEnergyHandler, IPipeTransportPowerHook {
 
 	public final boolean[] powerSources = new boolean[6];
-
+	
 	protected int standardIconIndex = PipeIconProvider.TYPE.PipePowerWood_Standard.ordinal();
 	protected int solidIconIndex = PipeIconProvider.TYPE.PipeAllWood_Solid.ordinal();
 
 	private PowerHandler powerHandler;
 	private final SafeTimeTracker sourcesTracker = new SafeTimeTracker(1);
 	private boolean full;
-
+	private int energy, requestedEnergy;
+	
 	public PipePowerWood(Item item) {
 		super(new PipeTransportPower(), item);
 		transport.initFromPipe(getClass());
@@ -67,12 +68,8 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 		if (container.getWorldObj().isRemote) {
 			return;
 		}
-
-		double mjStored = this.powerHandler.getEnergyStored();
-
-		//System.out.println("mjStored = " + mjStored);
 		
-		if (mjStored > 0) {
+		if (energy > 0) {
 			int sources = 0;
 
 			for (ForgeDirection o : ForgeDirection.VALID_DIRECTIONS) {
@@ -91,40 +88,23 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 			}
 
 			if (sources <= 0) {
-				mjStored = mjStored > 5 ? mjStored - 5 : 0;
+				energy = energy > 50 ? energy - 50 : 0;
 				return;
 			}
 
-			double energyToRemove;
-
-			/*if (mjStored > 40) {
-				energyToRemove = mjStored / 40 + 4;
-			} else if (mjStored > 10) {
-				energyToRemove = mjStored / 10;
-			} else {
-				energyToRemove = 1;
-			}*/
-			// TODO
-			energyToRemove = Math.min(32.0, mjStored);
-			energyToRemove /= sources;
-
+			int energyToUse = requestedEnergy / sources;
+			
 			for (ForgeDirection o : ForgeDirection.VALID_DIRECTIONS) {
-				if (!powerSources[o.ordinal()]) {
-					continue;
-				}
+				if (!powerSources[o.ordinal()]) continue;
 				
-				TileEntity tile = container.getTile(o);
+				int energyUsable = Math.min(energy, energyToUse);
+				if(energyUsable == 0) continue;
 				
-				double energyUsable = mjStored > energyToRemove ? energyToRemove : mjStored;
-				double energySent = transport.receiveEnergy(o, (int)Math.round(energyUsable * 10));
-
-				if (energySent > 0) {
-					mjStored -= energySent;
-				}
+				energy -= transport.receiveEnergy(o, energyUsable);
 			}
 		}
 		
-		this.powerHandler.setEnergy(mjStored);
+		requestedEnergy = 0;
 	}
 
 	public boolean requestsPower() {
@@ -171,6 +151,7 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 	@Override
 	public int requestEnergy(ForgeDirection from, int amount) {
 		if (container.getTile(from) instanceof IPipeTile) {
+			requestedEnergy += amount;
 			return amount;
 		} else {
 			return 0;
@@ -195,7 +176,9 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 
 	@Override
 	public void doWork(PowerHandler workProvider) {
-
+		energy += (int)Math.round(this.powerHandler.getEnergyStored() * 10);
+		this.powerHandler.setEnergy(0.0);
+		if(energy > 15000) energy = 15000;
 	}
 
 	@Override
@@ -206,14 +189,13 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 	@Override
 	public int receiveEnergy(ForgeDirection from, int maxReceive,
 			boolean simulate) {
-		double mjStored = this.powerHandler.getEnergyStored();
-		int maxEnergyToAdd = Math.min(maxReceive, Math.min(320, (int)Math.round((1500.0 - mjStored) * 10)));
+		int maxEnergyToAdd = Math.min(maxReceive, Math.min(320, energy));
 		if(!simulate) {
-			this.powerHandler.setEnergy(mjStored + ((double)maxEnergyToAdd / 10.0));
+			energy -= maxEnergyToAdd;
 		}
 		return maxEnergyToAdd;
 	}
-
+	
 	@Override
 	public int extractEnergy(ForgeDirection from, int maxExtract,
 			boolean simulate) {
@@ -222,11 +204,11 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 
 	@Override
 	public int getEnergyStored(ForgeDirection from) {
-		return (int)Math.round(this.powerHandler.getEnergyStored() * 10);
+		return energy;
 	}
 
 	@Override
 	public int getMaxEnergyStored(ForgeDirection from) {
-		return (int)Math.round(this.powerHandler.getMaxEnergyStored() * 10);
+		return 15000;
 	}
 }

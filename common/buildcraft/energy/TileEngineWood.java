@@ -9,9 +9,7 @@
 package buildcraft.energy;
 
 import net.minecraft.util.ResourceLocation;
-
 import net.minecraftforge.common.util.ForgeDirection;
-
 import buildcraft.api.power.PowerHandler;
 import buildcraft.api.transport.IPipeTile.PipeType;
 
@@ -115,5 +113,11 @@ public class TileEngineWood extends TileEngine {
 	@Override
 	public double maxEnergyExtracted() {
 		return 1 + PowerHandler.PerditionCalculator.MIN_POWERLOSS;
+	}
+	
+	// TODO: HACK
+	@Override
+	public boolean canConnectEnergy(ForgeDirection from) {
+		return false;
 	}
 }
