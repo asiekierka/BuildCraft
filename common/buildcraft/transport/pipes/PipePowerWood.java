@@ -116,7 +116,7 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 				TileEntity tile = container.getTile(o);
 				
 				double energyUsable = mjStored > energyToRemove ? energyToRemove : mjStored;
-				double energySent = transport.receiveEnergy(o, energyUsable);
+				double energySent = transport.receiveEnergy(o, (int)Math.round(energyUsable * 10));
 
 				if (energySent > 0) {
 					mjStored -= energySent;
@@ -164,12 +164,12 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 	}
 
 	@Override
-	public double receiveEnergy(ForgeDirection from, double val) {
+	public int receiveEnergy(ForgeDirection from, int val) {
 		return -1;
 	}
 
 	@Override
-	public double requestEnergy(ForgeDirection from, double amount) {
+	public int requestEnergy(ForgeDirection from, int amount) {
 		if (container.getTile(from) instanceof IPipeTile) {
 			return amount;
 		} else {
@@ -209,7 +209,6 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 		double mjStored = this.powerHandler.getEnergyStored();
 		int maxEnergyToAdd = Math.min(maxReceive, Math.min(320, (int)Math.round((1500.0 - mjStored) * 10)));
 		if(!simulate) {
-			System.out.println("givink energy 1 = " + maxEnergyToAdd);
 			this.powerHandler.setEnergy(mjStored + ((double)maxEnergyToAdd / 10.0));
 		}
 		return maxEnergyToAdd;

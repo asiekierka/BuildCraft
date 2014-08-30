@@ -77,7 +77,7 @@ public class TileEngineStone extends TileEngineWithInventory {
 			burnTime--;
 
 			double output = getCurrentOutput();
-			currentOutput = output; // Comment out for constant power
+			if(!constantPower) currentOutput = output; // Comment out for constant power
 			addEnergy(output);
 		}
 

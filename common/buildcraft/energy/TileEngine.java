@@ -35,7 +35,7 @@ import buildcraft.core.TileBuildCraft;
 import buildcraft.energy.gui.ContainerEngine;
 
 public abstract class TileEngine extends TileBuildCraft implements IPowerReceptor, IPowerEmitter, IOverrideDefaultTriggers, IPipeConnection, IEnergyHandler {
-	private boolean constantPower = false;
+	protected boolean constantPower = false;
 	
 	// Index corresponds to metadata
 	public static final ResourceLocation[] BASE_TEXTURES = new ResourceLocation[]{

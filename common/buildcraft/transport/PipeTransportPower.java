@@ -47,9 +47,9 @@ public class PipeTransportPower extends PipeTransport {
 	public float[] displayPower = new float[6];
 	public short[] clientDisplayPower = new short[6];
 	public int overload;
-	public double[] nextPowerQuery = new double[6];
-	public double[] internalNextPower = new double[6];
-	public double maxPower = 8;
+	public int[] nextPowerQuery = new int[6];
+	public int[] internalNextPower = new int[6];
+	public int maxPower = 8;
 	public float[] movementStage = new float[] {0, 0, 0};
 
 	private boolean needsInit = true;
@@ -57,12 +57,12 @@ public class PipeTransportPower extends PipeTransport {
 
 	private float[] prevDisplayPower = new float[6];
 
-	private double[] powerQuery = new double[6];
+	private int[] powerQuery = new int[6];
 
 	private long currentDate;
-	private double[] internalPower = new double[6];
+	private int[] internalPower = new int[6];
 
-	private double highestPower;
+	private float highestPower;
 	private SafeTimeTracker tracker = new SafeTimeTracker(2 * BuildCraftCore.updateFactor);
 
 	public PipeTransportPower() {
@@ -193,7 +193,7 @@ public class PipeTransportPower extends PipeTransport {
 		if (totalPowerContained > 0) {
 			for (int out = 0; out < 6; ++out) {
 				if (powerQuery[out] > 0 && internalPower[out] == 0) {
-					double powerConsumed = powerQuery[out] / totalPowerQuery * totalPowerContained;
+					int powerConsumed = (int)Math.round(powerQuery[out] / totalPowerQuery * totalPowerContained);
 
 					if (tiles[out] instanceof TileGenericPipe) {
 						// Transmit power to the nearby pipe
@@ -203,20 +203,20 @@ public class PipeTransportPower extends PipeTransport {
 						powerConsumed = nearbyTransport.receiveEnergy(
 								ForgeDirection.VALID_DIRECTIONS[out].getOpposite(),
 								powerConsumed);
+					} else if(tiles[out] instanceof IEnergyHandler) {
+						IEnergyHandler handler = ((IEnergyHandler)tiles[out]);
+						if(handler.canConnectEnergy(ForgeDirection.VALID_DIRECTIONS[out].getOpposite())) {
+							powerConsumed = handler.receiveEnergy(ForgeDirection.VALID_DIRECTIONS[out].getOpposite(),
+									powerConsumed, false);
+						}
 					} else {
 						PowerReceiver prov = getReceiverOnSide(ForgeDirection.VALID_DIRECTIONS[out]);
 
 						if (prov != null) {
 							// Transmit power to the legacy power framework
 
-							powerConsumed = prov.receiveEnergy(Type.PIPE, powerConsumed,
-									ForgeDirection.VALID_DIRECTIONS[out].getOpposite());
-						} else if(tiles[out] instanceof IEnergyHandler) {
-							IEnergyHandler handler = ((IEnergyHandler)tiles[out]);
-							if(handler.canConnectEnergy(ForgeDirection.VALID_DIRECTIONS[out].getOpposite())) {
-								powerConsumed = handler.receiveEnergy(ForgeDirection.VALID_DIRECTIONS[out].getOpposite(),
-										(int)Math.round(powerConsumed * 10), false) / 10.0;
-							}
+							powerConsumed = (int)Math.round(prov.receiveEnergy(Type.PIPE, (double)powerConsumed / 10,
+									ForgeDirection.VALID_DIRECTIONS[out].getOpposite()) * 10);
 						}
 					}
 
@@ -232,7 +232,7 @@ public class PipeTransportPower extends PipeTransport {
 		if (totalPowerConsumed > 0) {
 			for (int in = 0; in < 6; ++in) {
 				double powerConsumed = internalPower[in] / totalPowerContained * totalPowerConsumed;
-				displayPower[in] += powerConsumed;
+				displayPower[in] += (double)powerConsumed / 10;
 			}
 		}
 
@@ -265,22 +265,22 @@ public class PipeTransportPower extends PipeTransport {
 			TileEntity tile = tiles [dir.ordinal()];
 
 			if (!(tile instanceof TileGenericPipe && ((TileGenericPipe) tile).pipe.transport instanceof PipeTransportPower)) {
-				PowerReceiver prov = getReceiverOnSide(dir);
-				if (prov != null) {
-					double request = prov.powerRequest();
+				if(tile instanceof IEnergyHandler) {
+					IEnergyHandler handler = (IEnergyHandler)tile;
+					if(handler.canConnectEnergy(dir.getOpposite())) {
+						int request = handler.receiveEnergy(dir.getOpposite(), this.maxPower, true);
 
-					if (request > 0) {
-						requestEnergy(dir, request);
+						if (request > 0) {
+							requestEnergy(dir, request);
+						}
 					}
 				} else {
-					if(tile instanceof IEnergyHandler) {
-						IEnergyHandler handler = (IEnergyHandler)tile;
-						if(handler.canConnectEnergy(dir.getOpposite())) {
-							double request = handler.receiveEnergy(dir.getOpposite(), (int)Math.floor(this.maxPower * 10), true) / 10.0;
-
-							if (request > 0) {
-								requestEnergy(dir, request);
-							}
+					PowerReceiver prov = getReceiverOnSide(dir);
+					if (prov != null) {
+						int request = (int)Math.round(prov.powerRequest() * 10);
+	
+						if (request > 0) {
+							requestEnergy(dir, request);
 						}
 					}
 				}
@@ -289,7 +289,7 @@ public class PipeTransportPower extends PipeTransport {
 
 		// Sum the amount of energy requested on each side
 
-		double[] transferQuery = new double[6];
+		int[] transferQuery = new int[6];
 
 		for (int i = 0; i < 6; ++i) {
 			transferQuery[i] = 0;
@@ -364,10 +364,10 @@ public class PipeTransportPower extends PipeTransport {
 			currentDate = container.getWorldObj().getTotalWorldTime();
 
 			powerQuery = nextPowerQuery;
-			nextPowerQuery = new double[6];
+			nextPowerQuery = new int[6];
 
 			internalPower = internalNextPower;
-			internalNextPower = new double[6];
+			internalNextPower = new int[6];
 
 			for (int i = 0; i < internalNextPower.length; ++i) {
 				internalNextPower[i] = 0;
@@ -381,11 +381,11 @@ public class PipeTransportPower extends PipeTransport {
 	 * All power input MUST go through designated input pipes, such as Wooden
 	 * Power Pipes or a subclass thereof.
 	 */
-	public double receiveEnergy(ForgeDirection from, double valI) {
-		double val = valI;
+	public int receiveEnergy(ForgeDirection from, int valI) {
+		int val = valI;
 		step();
 		if (this.container.pipe instanceof IPipeTransportPowerHook) {
-			double ret = ((IPipeTransportPowerHook) this.container.pipe).receiveEnergy(from, val);
+			int ret = ((IPipeTransportPowerHook) this.container.pipe).receiveEnergy(from, val);
 			if (ret >= 0) {
 				return ret;
 			}
@@ -408,7 +408,7 @@ public class PipeTransportPower extends PipeTransport {
 		return val;
 	}
 
-	public void requestEnergy(ForgeDirection from, double amount) {
+	public void requestEnergy(ForgeDirection from, int amount) {
 		step();
 
 		if (this.container.pipe instanceof IPipeTransportPowerHook) {
@@ -428,10 +428,10 @@ public class PipeTransportPower extends PipeTransport {
 		super.readFromNBT(nbttagcompound);
 
 		for (int i = 0; i < 6; ++i) {
-			powerQuery[i] = nbttagcompound.getDouble("powerQuery[" + i + "]");
-			nextPowerQuery[i] = nbttagcompound.getDouble("nextPowerQuery[" + i + "]");
-			internalPower[i] = (float) nbttagcompound.getDouble("internalPower[" + i + "]");
-			internalNextPower[i] = (float) nbttagcompound.getDouble("internalNextPower[" + i + "]");
+			powerQuery[i] = nbttagcompound.getInteger("powerQuery[" + i + "]");
+			nextPowerQuery[i] = nbttagcompound.getInteger("nextPowerQuery[" + i + "]");
+			internalPower[i] = nbttagcompound.getInteger("internalPower[" + i + "]");
+			internalNextPower[i] = nbttagcompound.getInteger("internalNextPower[" + i + "]");
 		}
 
 	}
@@ -441,10 +441,10 @@ public class PipeTransportPower extends PipeTransport {
 		super.writeToNBT(nbttagcompound);
 
 		for (int i = 0; i < 6; ++i) {
-			nbttagcompound.setDouble("powerQuery[" + i + "]", powerQuery[i]);
-			nbttagcompound.setDouble("nextPowerQuery[" + i + "]", nextPowerQuery[i]);
-			nbttagcompound.setDouble("internalPower[" + i + "]", internalPower[i]);
-			nbttagcompound.setDouble("internalNextPower[" + i + "]", internalNextPower[i]);
+			nbttagcompound.setInteger("powerQuery[" + i + "]", powerQuery[i]);
+			nbttagcompound.setInteger("nextPowerQuery[" + i + "]", nextPowerQuery[i]);
+			nbttagcompound.setInteger("internalPower[" + i + "]", internalPower[i]);
+			nbttagcompound.setInteger("internalNextPower[" + i + "]", internalNextPower[i]);
 		}
 	}
 
@@ -469,7 +469,7 @@ public class PipeTransportPower extends PipeTransport {
 	 * @return MJ/t
 	 */
 	public double getCurrentPowerTransferRate() {
-		return highestPower;
+		return highestPower / 10.0;
 	}
 
 	/**
@@ -488,7 +488,7 @@ public class PipeTransportPower extends PipeTransport {
 		for (double d : internalNextPower) {
 			amount += d;
 		}
-		return amount;
+		return amount / 10.0;
 	}
 
 	public float getPistonStage (int i) {
@@ -511,13 +511,13 @@ public class PipeTransportPower extends PipeTransport {
 	}
 
 	static {
-		powerCapacities.put(PipePowerCobblestone.class, 8);
-		powerCapacities.put(PipePowerStone.class, 16);
-		powerCapacities.put(PipePowerWood.class, 32);
-		powerCapacities.put(PipePowerQuartz.class, 64);
-		powerCapacities.put(PipePowerIron.class, 128);
-		powerCapacities.put(PipePowerGold.class, 256);
-		powerCapacities.put(PipePowerDiamond.class, 1024);
-		powerCapacities.put(PipePowerHeat.class, 1024);
+		powerCapacities.put(PipePowerCobblestone.class, 80);
+		powerCapacities.put(PipePowerStone.class, 160);
+		powerCapacities.put(PipePowerWood.class, 320);
+		powerCapacities.put(PipePowerQuartz.class, 640);
+		powerCapacities.put(PipePowerIron.class, 1280);
+		powerCapacities.put(PipePowerGold.class, 2560);
+		powerCapacities.put(PipePowerDiamond.class, 10240);
+		powerCapacities.put(PipePowerHeat.class, 10240);
 	}
 }
