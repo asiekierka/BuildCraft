@@ -247,12 +247,14 @@ public abstract class TileEngine extends TileBuildCraft implements IPowerRecepto
 			}
 		} else if (isRedstonePowered && isActive()) {
 			if (isPoweredTile(tile, orientation)) {
+				/*progressPart = 1;
+				setPumping(true);
 				if (getPowerToExtract() > 0) {
 					progressPart = 1;
 					setPumping(true);
 				} else {
 					setPumping(false);
-				}
+				}*/
 			} else {
 				setPumping(false);
 			}
@@ -296,6 +298,8 @@ public abstract class TileEngine extends TileBuildCraft implements IPowerRecepto
 		TileEntity tile = getTileBuffer(orientation).getTile();
 		if (isPoweredTile(tile, orientation)) {
 			double extracted = getPowerToExtract();
+			if(extracted > 0) setPumping(true);
+			else setPumping(false);
 			
 			if (tile instanceof IEnergyHandler) {
 				IEnergyHandler handler = ((IEnergyHandler) tile);
@@ -603,7 +607,9 @@ public abstract class TileEngine extends TileBuildCraft implements IPowerRecepto
 	@Override
 	public int extractEnergy(ForgeDirection from, int maxExtract,
 			boolean simulate) {
-		if(!(from == orientation)) return 0;
+		return 0;
+		
+		/*if(!(from == orientation)) return 0;
 		
 		int energyRF = (int)Math.round(10 * energy);
 		int energyExtracted = Math.min(maxExtract, energyRF);
@@ -611,7 +617,7 @@ public abstract class TileEngine extends TileBuildCraft implements IPowerRecepto
 			if(energyExtracted == energyRF) energy = 0;
 			else energy -= (double)energyExtracted / 10.0;
 		}
-		return energyExtracted;
+		return energyExtracted;*/
 	}
 
 	@Override
