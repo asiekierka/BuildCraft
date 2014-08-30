@@ -97,15 +97,15 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 
 			double energyToRemove;
 
-			/* if (mjStored > 40) {
+			/*if (mjStored > 40) {
 				energyToRemove = mjStored / 40 + 4;
 			} else if (mjStored > 10) {
 				energyToRemove = mjStored / 10;
 			} else {
 				energyToRemove = 1;
-			} */
+			}*/
 			// TODO
-			energyToRemove = mjStored;
+			energyToRemove = Math.min(32.0, mjStored);
 			energyToRemove /= sources;
 
 			for (ForgeDirection o : ForgeDirection.VALID_DIRECTIONS) {
