@@ -230,11 +230,11 @@ public class BuildCraftCore extends BuildCraftMod {
 		try {
 			mainConfiguration.load();
 
-			Property updateCheck = BuildCraftCore.mainConfiguration.get(Configuration.CATEGORY_GENERAL, "update.check", true);
+			/* Property updateCheck = BuildCraftCore.mainConfiguration.get(Configuration.CATEGORY_GENERAL, "update.check", true);
 			updateCheck.comment = "set to true for version check on startup";
 			if (updateCheck.getBoolean(true)) {
 				Version.check();
-			}
+			} */
 
 			Property dropBlock = BuildCraftCore.mainConfiguration.get(Configuration.CATEGORY_GENERAL, "dropBrokenBlocks", true);
 			dropBlock.comment = "set to false to prevent fillers from dropping blocks.";
