@@ -118,7 +118,7 @@ public class BuildCraftCore extends BuildCraftMod {
 	public static boolean modifyWorld = false;
 	public static boolean colorBlindMode = false;
 	public static boolean dropBrokenBlocks = true; // Set to false to prevent the filler from dropping broken blocks.
-	public static int itemLifespan = 1200;
+	public static int itemLifespan = 400;
 	public static int updateFactor = 10;
 	public static long longUpdateFactor = 40;
 	public static BuildCraftConfiguration mainConfiguration;
@@ -241,7 +241,7 @@ public class BuildCraftCore extends BuildCraftMod {
 			dropBrokenBlocks = dropBlock.getBoolean(true);
 
 			Property lifespan = BuildCraftCore.mainConfiguration.get(Configuration.CATEGORY_GENERAL, "itemLifespan", itemLifespan);
-			lifespan.comment = "the lifespan in ticks of items dropped on the ground by pipes and machines, vanilla = 6000, default = 1200";
+			lifespan.comment = "the lifespan in ticks of items dropped on the ground by pipes and machines, vanilla = 6000, default = 400";
 			itemLifespan = lifespan.getInt(itemLifespan);
 			if (itemLifespan < 100) {
 				itemLifespan = 100;

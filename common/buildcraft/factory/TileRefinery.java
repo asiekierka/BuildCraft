@@ -103,10 +103,12 @@ public class TileRefinery extends TileRFBuildCraft implements IFluidHandler, IIn
 	@Override
 	public void updateEntity() {
 		super.updateEntity();
+		
 		if (worldObj.isRemote) {
 			simpleAnimationIterate();
 			return;
 		}
+		
 		if (updateNetworkTime.markTimeIfDelay(worldObj)) {
 			sendNetworkUpdate();
 		}

@@ -29,6 +29,7 @@ import buildcraft.core.DefaultProps;
 import buildcraft.transport.network.PacketPowerUpdate;
 import buildcraft.transport.pipes.PipePowerCobblestone;
 import buildcraft.transport.pipes.PipePowerDiamond;
+import buildcraft.transport.pipes.PipePowerEmerald;
 import buildcraft.transport.pipes.PipePowerGold;
 import buildcraft.transport.pipes.PipePowerHeat;
 import buildcraft.transport.pipes.PipePowerIron;
@@ -61,7 +62,7 @@ public class PipeTransportPower extends PipeTransport {
 	private long currentDate;
 	private int[] internalPower = new int[6];
 
-	private float highestPower;
+	private int highestPower;
 	private SafeTimeTracker tracker = new SafeTimeTracker(2 * BuildCraftCore.updateFactor);
 
 	public PipeTransportPower() {
@@ -511,6 +512,7 @@ public class PipeTransportPower extends PipeTransport {
 		powerCapacities.put(PipePowerQuartz.class, 640);
 		powerCapacities.put(PipePowerIron.class, 1280);
 		powerCapacities.put(PipePowerGold.class, 2560);
+		powerCapacities.put(PipePowerEmerald.class, 2560);
 		powerCapacities.put(PipePowerDiamond.class, 10240);
 		powerCapacities.put(PipePowerHeat.class, 10240);
 	}

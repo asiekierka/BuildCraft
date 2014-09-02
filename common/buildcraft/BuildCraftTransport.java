@@ -17,7 +17,6 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
-
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLInterModComms;
@@ -26,12 +25,10 @@ import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
-
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.oredict.RecipeSorter;
-
 import buildcraft.api.blueprints.SchematicRegistry;
 import buildcraft.api.core.IIconProvider;
 import buildcraft.api.core.JavaTools;
@@ -96,6 +93,7 @@ import buildcraft.transport.pipes.PipeItemsVoid;
 import buildcraft.transport.pipes.PipeItemsWood;
 import buildcraft.transport.pipes.PipePowerCobblestone;
 import buildcraft.transport.pipes.PipePowerDiamond;
+import buildcraft.transport.pipes.PipePowerEmerald;
 import buildcraft.transport.pipes.PipePowerGold;
 import buildcraft.transport.pipes.PipePowerHeat;
 import buildcraft.transport.pipes.PipePowerIron;
@@ -162,6 +160,7 @@ public class BuildCraftTransport extends BuildCraftMod {
 	public static Item pipePowerGold;
 	public static Item pipePowerDiamond;
 	public static Item pipePowerHeat;
+	public static Item pipePowerEmerald;
 	public static ItemFacade facadeItem;
 	public static Item plugItem;
 	public static Item robotStationItem;
@@ -359,6 +358,7 @@ public class BuildCraftTransport extends BuildCraftMod {
 			pipePowerIron = buildPipe(PipePowerIron.class, "Iron Kinesis Pipe", CreativeTabBuildCraft.PIPES, Items.redstone, pipeItemsIron);
 			pipePowerGold = buildPipe(PipePowerGold.class, "Golden Kinesis Pipe", CreativeTabBuildCraft.PIPES, Items.redstone, pipeItemsGold);
 			pipePowerDiamond = buildPipe(PipePowerDiamond.class, "Diamond Kinesis Pipe", CreativeTabBuildCraft.PIPES, Items.redstone, pipeItemsDiamond);
+			pipePowerEmerald = buildPipe(PipePowerEmerald.class, "Emerald Kinesis Pipe", CreativeTabBuildCraft.PIPES, Items.redstone, pipeItemsEmerald);
 
 			if (!BuildCraftCore.NEXTGEN_PREALPHA) {
 				pipePowerHeat = buildPipe(PipePowerHeat.class, "Heat Kinesis Pipe", CreativeTabBuildCraft.PIPES, Blocks.furnace, pipeItemsDiamond);
@@ -446,6 +446,7 @@ public class BuildCraftTransport extends BuildCraftMod {
 		new BptPipeWooden(pipeFluidsWood);
 		new BptPipeWooden(pipePowerWood);
 		new BptPipeWooden(pipeItemsEmerald);
+		new BptPipeWooden(pipePowerEmerald);
 
 		new BptItemPipeFilters(pipeItemsDiamond);
 

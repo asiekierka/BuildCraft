@@ -31,7 +31,6 @@ import buildcraft.transport.PipeIconProvider;
 import buildcraft.transport.PipeTransportPower;
 
 public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerReceptor, IEnergyHandler, IPipeTransportPowerHook {
-
 	public final boolean[] powerSources = new boolean[6];
 	
 	protected int standardIconIndex = PipeIconProvider.TYPE.PipePowerWood_Standard.ordinal();
@@ -40,7 +39,7 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 	private PowerHandler powerHandler;
 	private final SafeTimeTracker sourcesTracker = new SafeTimeTracker(1);
 	private boolean full;
-	private int energy, requestedEnergy;
+	private int energy, requestedEnergy, sources, fullTicks;
 	
 	public PipePowerWood(Item item) {
 		super(new PipeTransportPower(), item);
@@ -58,18 +57,19 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 
 	@Override
 	public int getIconIndex(ForgeDirection direction) {
-		return standardIconIndex;
+		if((direction != ForgeDirection.UNKNOWN) && powerSources[direction.ordinal()]) return solidIconIndex;
+		else return standardIconIndex;
 	}
 
+	public int getMaxPowerInput() {
+		return PipeTransportPower.powerCapacities.get(this.getClass());
+	}
+	
 	@Override
 	public void updateEntity() {
 		super.updateEntity();
-
-		if (container.getWorldObj().isRemote) {
-			return;
-		}
 		
-		int sources = 0;
+		sources = 0;
 
 		for (ForgeDirection o : ForgeDirection.VALID_DIRECTIONS) {
 			if (!container.isPipeConnected(o)) {
@@ -83,6 +83,13 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 				sources++;
 			}
 		}
+		
+		if (container.getWorldObj().isRemote) {
+			return;
+		}
+		
+		if (full) fullTicks++;
+		else fullTicks = 0;
 
 		if (sources <= 0) {
 			energy = energy > 50 ? energy - 50 : 0;
@@ -98,7 +105,7 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 				TileEntity tile = container.getTile(o);
 				
 				if(tile instanceof IEnergyHandler) {
-					int energyToRemove = Math.min(15000 - energy, energyToUse);
+					int energyToRemove = Math.min(this.getMaxEnergyStored() - energy, energyToUse);
 					energy += ((IEnergyHandler)tile).extractEnergy(o.getOpposite(), energyToRemove, false);
 				}	
 			}
@@ -120,7 +127,7 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 
 	public boolean requestsPower() {
 		if (full) {
-			boolean request = this.powerHandler.getEnergyStored() < 1500 / 2;
+			boolean request = energy < (this.getMaxEnergyStored() / 2);
 
 			if (request) {
 				full = false;
@@ -129,7 +136,7 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 			return request;
 		}
 
-		full = this.powerHandler.getEnergyStored() >= 1500 - 10;
+		full = energy >= (this.getMaxEnergyStored() - 100);
 
 		return !full;
 	}
@@ -189,7 +196,7 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 	public void doWork(PowerHandler workProvider) {
 		energy += (int)Math.round(this.powerHandler.getEnergyStored() * 10);
 		this.powerHandler.setEnergy(0.0);
-		if(energy > 15000) energy = 15000;
+		energy = Math.min(energy, this.getMaxEnergyStored());
 	}
 
 	@Override
@@ -200,7 +207,7 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 	@Override
 	public int receiveEnergy(ForgeDirection from, int maxReceive,
 			boolean simulate) {
-		int maxEnergyToAdd = Math.min(maxReceive, 320);
+		int maxEnergyToAdd = Math.min(maxReceive, getMaxPowerInput() / sources);
 		if(!simulate) {
 			energy += maxEnergyToAdd;
 		}
@@ -218,8 +225,12 @@ public class PipePowerWood extends Pipe<PipeTransportPower> implements IPowerRec
 		return energy;
 	}
 
+	public int getMaxEnergyStored() {
+		return 50 * this.getMaxPowerInput();
+	}
+	
 	@Override
 	public int getMaxEnergyStored(ForgeDirection from) {
-		return 15000;
+		return this.getMaxEnergyStored();
 	}
 }
