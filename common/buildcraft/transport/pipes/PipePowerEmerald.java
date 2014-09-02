@@ -14,6 +14,7 @@ public class PipePowerEmerald extends PipePowerWood {
 
 	public PipePowerEmerald(Item item) {
 		super(item);
+		transport.initFromPipe(getClass());
 	}
 	
 	@Override
