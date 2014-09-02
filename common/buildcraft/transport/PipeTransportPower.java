@@ -44,8 +44,9 @@ public class PipeTransportPower extends PipeTransport {
 	private static final int DISPLAY_SMOOTHING = 10;
 	private static final int OVERLOAD_TICKS = 60;
 
-	public float[] displayPower = new float[6];
-	public short[] clientDisplayPower = new short[6];
+	public short[] displayPower = new short[6];
+	private short[] prevDisplayPower = new short[6];
+	
 	public int overload;
 	public int[] nextPowerQuery = new int[6];
 	public int[] internalNextPower = new int[6];
@@ -54,8 +55,6 @@ public class PipeTransportPower extends PipeTransport {
 
 	private boolean needsInit = true;
 	private TileEntity[] tiles = new TileEntity[6];
-
-	private float[] prevDisplayPower = new float[6];
 
 	private int[] powerQuery = new int[6];
 
@@ -166,7 +165,7 @@ public class PipeTransportPower extends PipeTransport {
 		// Send the power to nearby pipes who requested it
 
 		System.arraycopy(displayPower, 0, prevDisplayPower, 0, 6);
-		Arrays.fill(displayPower, 0.0F);
+		Arrays.fill(displayPower, (short)0);
 
 		// STEP 1 - computes the total amount of power contained and total
 		// amount of power queried
@@ -231,8 +230,8 @@ public class PipeTransportPower extends PipeTransport {
 
 		if (totalPowerConsumed > 0) {
 			for (int in = 0; in < 6; ++in) {
-				double powerConsumed = internalPower[in] / totalPowerContained * totalPowerConsumed;
-				displayPower[in] += (double)powerConsumed / 10;
+				int powerConsumed = (int)Math.ceil(internalPower[in] * totalPowerConsumed / totalPowerContained);
+				displayPower[in] += powerConsumed;
 			}
 		}
 
@@ -240,7 +239,7 @@ public class PipeTransportPower extends PipeTransport {
 
 		highestPower = 0;
 		for (int i = 0; i < 6; i++) {
-			displayPower[i] = (prevDisplayPower[i] * (DISPLAY_SMOOTHING - 1.0F) + displayPower[i]) / DISPLAY_SMOOTHING;
+			displayPower[i] = (short)((prevDisplayPower[i] * (DISPLAY_SMOOTHING - 1) + displayPower[i]) / DISPLAY_SMOOTHING);
 
 			if (displayPower[i] > highestPower) {
 				highestPower = displayPower[i];
@@ -327,12 +326,7 @@ public class PipeTransportPower extends PipeTransport {
 		if (tracker.markTimeIfDelay(container.getWorldObj())) {
 			PacketPowerUpdate packet = new PacketPowerUpdate(container.xCoord, container.yCoord, container.zCoord);
 
-			double displayFactor = MAX_DISPLAY / 1024.0;
-			for (int i = 0; i < clientDisplayPower.length; i++) {
-				clientDisplayPower[i] = (short) (Math.ceil(displayPower[i] * displayFactor));
-			}
-
-			packet.displayPower = clientDisplayPower;
+			packet.displayPower = displayPower;
 			packet.overload = isOverloaded();
 			BuildCraftTransport.instance.sendToPlayers(packet, container.getWorldObj(), container.xCoord, container.yCoord, container.zCoord, DefaultProps.PIPE_CONTENTS_RENDER_DIST);
 		}
@@ -458,7 +452,7 @@ public class PipeTransportPower extends PipeTransport {
 	 * @param packetPower
 	 */
 	public void handlePowerPacket(PacketPowerUpdate packetPower) {
-		clientDisplayPower = packetPower.displayPower;
+		displayPower = packetPower.displayPower;
 		overload = packetPower.overload ? OVERLOAD_TICKS : 0;
 	}
 

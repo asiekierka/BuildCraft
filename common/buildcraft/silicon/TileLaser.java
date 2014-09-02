@@ -54,7 +54,7 @@ public class TileLaser extends TileRFBuildCraft implements IActionReceptor, IMac
 
 	@Override
 	public RFBattery getDefaultBattery() {
-		return new RFBattery(1000, 250);
+		return new RFBattery(10000, 250);
 	}
 	
 	
@@ -115,21 +115,21 @@ public class TileLaser extends TileRFBuildCraft implements IActionReceptor, IMac
 		}
 
 		// Consume power and transfer it to the table.
-		double localPower = getBattery().getEnergyStored() > getMaxPowerSent() * 10? getMaxPowerSent() : getBattery().getEnergyStored() /10D;
-		getBattery().modifyEnergyStored((int)(-localPower * 10D));
-		laserTarget.receiveLaserEnergy(localPower);
+		int localPower = getBattery().getEnergyStored() > getMaxPowerSent() ? getMaxPowerSent() : getBattery().getEnergyStored();
+		getBattery().modifyEnergyStored(0 - localPower);
+		laserTarget.receiveLaserEnergy(localPower / 10.0D);
 
 		if (laser != null) {
-			pushPower(localPower);
+			pushPower(localPower / 10.0D);
 		}
 
-		onPowerSent(localPower);
+		onPowerSent(localPower / 10.0D);
 
 		sendNetworkUpdate();
 	}
 
-	protected float getMaxPowerSent() {
-		return 4;
+	protected int getMaxPowerSent() {
+		return 40;
 	}
 
 	protected void onPowerSent(double power) {
