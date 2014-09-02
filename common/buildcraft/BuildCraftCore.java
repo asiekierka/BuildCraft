@@ -108,12 +108,13 @@ import buildcraft.core.utils.CraftingHandler;
 
 @Mod(name = "BuildCraft", version = Version.VERSION, useMetadata = false, modid = "BuildCraft|Core", acceptedMinecraftVersions = "[1.7.10,1.8)", dependencies = "required-after:Forge@[10.13.0.1179,)")
 public class BuildCraftCore extends BuildCraftMod {
-	public static final boolean NEXTGEN_PREALPHA = true;
+	public static final boolean NEXTGEN_PREALPHA = false;
 
 	public static enum RenderMode {
 		Full, NoDynamic
 	}
 	public static RenderMode render = RenderMode.Full;
+	public static boolean usePerdition = true;
 	public static boolean debugMode = false;
 	public static boolean modifyWorld = false;
 	public static boolean colorBlindMode = false;
@@ -235,10 +236,14 @@ public class BuildCraftCore extends BuildCraftMod {
 			if (updateCheck.getBoolean(true)) {
 				Version.check();
 			} */
-
+			
 			Property dropBlock = BuildCraftCore.mainConfiguration.get(Configuration.CATEGORY_GENERAL, "dropBrokenBlocks", true);
 			dropBlock.comment = "set to false to prevent fillers from dropping blocks.";
 			dropBrokenBlocks = dropBlock.getBoolean(true);
+
+			Property usePerdition = BuildCraftCore.mainConfiguration.get(Configuration.CATEGORY_GENERAL, "usePerdition", true);
+			usePerdition.comment = "set to false to remove all losses/perdition";
+			this.usePerdition = usePerdition.getBoolean(true);
 
 			Property lifespan = BuildCraftCore.mainConfiguration.get(Configuration.CATEGORY_GENERAL, "itemLifespan", itemLifespan);
 			lifespan.comment = "the lifespan in ticks of items dropped on the ground by pipes and machines, vanilla = 6000, default = 400";

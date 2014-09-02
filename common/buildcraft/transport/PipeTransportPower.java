@@ -64,7 +64,8 @@ public class PipeTransportPower extends PipeTransport {
 
 	private int highestPower;
 	private SafeTimeTracker tracker = new SafeTimeTracker(2 * BuildCraftCore.updateFactor);
-
+	private int perditionAmount;
+	
 	public PipeTransportPower() {
 		for (int i = 0; i < 6; ++i) {
 			powerQuery[i] = 0;
@@ -82,6 +83,10 @@ public class PipeTransportPower extends PipeTransport {
 
 	public void initFromPipe(Class<? extends Pipe> pipeClass) {
 		maxPower = powerCapacities.get(pipeClass);
+		if(BuildCraftCore.usePerdition)
+			perditionAmount = (int)Math.ceil(maxPower / 80.0f);
+		else
+			perditionAmount = 0;
 	}
 
 	@Override
